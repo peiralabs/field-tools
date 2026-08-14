@@ -27,7 +27,7 @@ Seven of the eleven are a single HTML file with no build step, no framework, and
 
 ## Quick start
 
-**Three ways to use them, in increasing order of commitment:**
+**Four ways to use them, in increasing order of commitment:**
 
 **1. Just use them.** Open [peira.dev/tools](https://peira.dev/tools/). Nothing to install.
 
@@ -41,7 +41,22 @@ xdg-open blast-radius.html    # macOS: open · Windows: start
 
 That's the whole install. Save the file to a USB stick and it still works on a machine with no internet.
 
-**3. Fork and change one.** Every tool is also published as a public, remixable Claude artifact — open one, hit remix, and edit it in the browser. Links in [the table below](#the-eleven-tools). Or edit the HTML here and send a pull request; see [CONTRIBUTING.md](CONTRIBUTING.md).
+**3. Point the thinking ones at your own model.** The four model-backed tools work three ways, and pick whichever is available:
+
+- **On claude.ai** they use the in-artifact API — no key, no setup, your existing subscription.
+- **Anywhere else, with a hosted provider** — OpenAI, Anthropic, Gemini, DeepSeek, Groq or OpenRouter. Paste a key and pick a model. The request goes from your browser straight to them; it does not pass through any server of mine, because there isn't one.
+- **Anywhere else, with your own model** — Ollama, LM Studio, llama.cpp, vLLM, or anything else speaking the OpenAI chat API.
+
+A self-hosted model needs the tool to be running locally, and that is a browser rule rather than a choice I made. A page served over HTTPS is not allowed to call a private address: Chrome's [Private Network Access](https://developer.chrome.com/blog/private-network-access-preflight) rules require the local server to opt in with a header Ollama doesn't send, and Ollama separately refuses any origin outside `localhost` by default. So `peira.dev` genuinely cannot reach your box. Serve the file yourself instead and both objections vanish:
+
+```bash
+python3 cors-server.py                        # http://127.0.0.1:8643, loopback only
+# then open http://localhost:8643/log-triage.html and choose Ollama
+```
+
+Ollama needs no configuration for this — it allows `localhost` origins out of the box. Point it at `http://localhost:11434/v1`, or at another machine on your LAN (`http://10.0.0.50:11434/v1`) — what matters to Ollama is the *page's* origin, not the target.
+
+**4. Fork and change one.** Every tool is also published as a public, remixable Claude artifact — open one, hit remix, and edit it in the browser. Links in [the table below](#the-eleven-tools). Or edit the HTML here and send a pull request; see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
@@ -63,7 +78,7 @@ Grouped by the moment you'd reach for them.
 | **FT-10** | [Blast Radius Mapper](blast-radius.html) | What *else* stops when this stops? | [artifact](https://claude.ai/public/artifacts/5ab90394-1abf-4a1b-a7fd-f0c5d17f8920) |
 | **FT-11** | [Bus Factor](bus-factor.html) | Could anyone else recover this if I weren't here? | [artifact](https://claude.ai/public/artifacts/9104b77b-75fa-4f26-8fa6-d30a26ba3c1e) |
 
-🤖 = needs a Claude account, because it needs a model. The other seven need nothing.
+🤖 = needs a model behind it. Free on claude.ai with the account you already have, or point it at OpenAI, Anthropic, Gemini, DeepSeek, Groq, OpenRouter, or your own Ollama — see [Quick start](#quick-start). The other seven need nothing at all.
 
 ### Plan the build
 
@@ -112,7 +127,7 @@ This walks them in order: the route inside the guest, the ACL grant (a subnet-ro
 <details>
 <summary><b>FT-05 · Homelab Troubleshooter</b> 🤖 — ranked causes, not a lecture</summary>
 
-![Homelab troubleshooter showing the notice that it runs on claude.ai, above its input form](docs/screenshots/ft-05-troubleshooter.png)
+![Homelab troubleshooter showing the model setup panel — provider, base URL, API key and model fields — above its input form](docs/screenshots/ft-05-troubleshooter.png)
 
 Describe what's broken; get ranked likely causes, the exact commands to check them, and the probable fix — in the order an experienced homelabber would actually try them, boring causes first.
 
@@ -122,7 +137,7 @@ The screenshot shows what the **self-hosted copy** looks like: it detects that t
 <details>
 <summary><b>FT-06 · Log Triage</b> 🤖 — the one line that matters</summary>
 
-![Log triage showing its input form and the claude.ai notice](docs/screenshots/ft-06-log-triage.png)
+![Log triage showing its input form beneath the model setup panel](docs/screenshots/ft-06-log-triage.png)
 
 Paste the wall of output. Get the line that is actually the cause, what it means in plain English, **which of the scary-looking lines you can safely ignore**, and the next command to run.
 
@@ -208,7 +223,8 @@ It lives in `localStorage` on one origin and goes nowhere near a server — whic
 
 - **No accounts, no cookies, no analytics** on any tool page.
 - **The seven offline tools make no network calls at all** once loaded — all arithmetic happens in the page, and anything you save stays in your browser.
-- **The four AI tools** send what you type to **your own Claude account** via the in-artifact API. Nothing reaches me. I never see any of it, and I pay nothing to run them — which is precisely why they can stay free.
+- **The four model-backed tools** send what you type to **whichever model you chose** — your own Claude account on claude.ai, a provider you supplied a key for, or a model on your own hardware. Nothing reaches me in any of those cases. There is no server here to reach: the page talks to the provider directly.
+- **If you paste an API key**, it is held only for that browser tab unless you tick "remember on this device", it is never written into your Lab Profile (which is designed to be exported and shared, so a credential must never land in it), and it is sent to exactly one host — the provider you picked. Clearing it is one click.
 - **One third-party request exists** and it would be dishonest not to name it: the pages load their typeface from Google Fonts. That's it. If that bothers you, self-host the two font families and delete the `<link>`.
 - **Every address shipped here is a non-routable example** — `10.0.x.x` (that is, `10.0.0.0/16`) from the [RFC 1918](https://datatracker.ietf.org/doc/html/rfc1918) private range, plus the [RFC 6598](https://datatracker.ietf.org/doc/html/rfc6598) shared-address range base `100.64.0.0` where a tool needs to talk about CGNAT. Hostnames are placeholders. **No real network is described anywhere in this repo**, and the gate fails the build if an address outside those ranges appears.
 

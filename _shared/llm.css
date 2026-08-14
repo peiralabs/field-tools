@@ -1,0 +1,50 @@
+  /* ---- model setup panel (shared by FT-05..FT-08) ---- */
+  .llmset { margin-bottom:18px; padding:18px 20px; border:1px solid var(--hair2,#aeac9e);
+    border-left:none; border-right:none; background:var(--card2,#e5e3d7); font-size:14px; line-height:1.65; }
+  .llmset > b { font-family:var(--fd,sans-serif); color:var(--ink,#1f211b); display:block; margin-bottom:6px; }
+  .llmset p { margin:0 0 14px; }
+  .lrow { display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+  .lrow label { flex:1; min-width:190px; display:flex; flex-direction:column; gap:5px;
+    font-family:var(--fm,monospace); font-size:10.5px; text-transform:uppercase;
+    letter-spacing:.14em; color:var(--dim,#5b5e53); }
+  .linput, .llmset select { background:var(--card,#faf9f4); color:var(--ink,#1f211b);
+    border:1px solid var(--hair2,#aeac9e); border-radius:2px; padding:9px 11px; font-size:13.5px;
+    font-family:var(--fb,sans-serif); width:100%; text-transform:none; letter-spacing:normal; }
+  .linput:focus, .llmset select:focus { outline:none; border-color:var(--accent,#116d66);
+    box-shadow:0 0 0 3px color-mix(in srgb, var(--accent,#116d66) 15%, transparent); }
+  .lm, .lb { font-family:var(--fm,monospace); font-size:12.5px; }
+  .lopts { display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
+  .lchk { display:flex; align-items:center; gap:7px; font-family:var(--fm,monospace);
+    font-size:11px; color:var(--dim,#5b5e53); letter-spacing:.04em; cursor:pointer; }
+  .lchk input { accent-color:var(--accent,#116d66); }
+  .lload { background:var(--card,#faf9f4); border:1px solid var(--hair2,#aeac9e); color:var(--dim,#5b5e53);
+    border-radius:2px; padding:7px 14px; cursor:pointer; font-family:var(--fm,monospace);
+    font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; }
+  .lload:hover { border-color:var(--accent,#116d66); color:var(--accent,#116d66); }
+  .lload:disabled { opacity:.5; cursor:wait; }
+  .lnote { font-family:var(--fm,monospace); font-size:11.5px; color:var(--dim,#5b5e53);
+    letter-spacing:.03em; margin:0 0 10px !important; word-break:break-word; }
+  .lnote a { color:var(--accent,#116d66); text-decoration:none; border-bottom:1px solid var(--accent,#116d66); }
+  .lw { background:color-mix(in srgb, var(--warn,#a8752a) 8%, var(--card,#faf9f4));
+    border:1px solid color-mix(in srgb, var(--warn,#a8752a) 45%, transparent); border-radius:2px;
+    padding:10px 12px; font-size:12.5px; margin:0 0 12px !important; }
+  .lw code { background:var(--card2,#e5e3d7); border-radius:2px; padding:1px 5px;
+    font-family:var(--fm,monospace); font-size:11.5px; }
+  .lact { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .lact .go { margin-top:0; }
+  .lalt { color:var(--accent,#116d66); font-size:12.5px; text-decoration:none;
+    border-bottom:1px solid var(--accent,#116d66); }
+  .lalt:hover { background:color-mix(in srgb, var(--accent,#116d66) 12%, transparent); }
+  .lpriv { display:block; margin:12px 0 0 !important; font-family:var(--fm,monospace);
+    font-size:11px; color:var(--dim,#5b5e53); letter-spacing:.03em; line-height:1.6; }
+  /* status chip once a model is chosen */
+  .llmchip { display:inline-flex; align-items:center; gap:7px; font-family:var(--fm,monospace);
+    font-size:10.5px; color:var(--dim,#5b5e53); letter-spacing:.06em; text-transform:uppercase; }
+  .llmchip b { color:var(--accent,#116d66); font-family:var(--fm,monospace); }
+  .llmchip code { font-family:var(--fm,monospace); text-transform:none; letter-spacing:0;
+    background:var(--card2,#e5e3d7); border-radius:2px; padding:1px 5px; }
+  .lchg { background:none; border:none; border-bottom:1px solid var(--hair2,#aeac9e); color:var(--dim,#5b5e53);
+    cursor:pointer; font-family:var(--fm,monospace); font-size:10.5px; letter-spacing:.06em;
+    text-transform:uppercase; padding:0 0 1px; }
+  .lchg:hover { color:var(--accent,#116d66); border-color:var(--accent,#116d66); }
+  @media (max-width:560px) { .lrow label { min-width:100%; } }

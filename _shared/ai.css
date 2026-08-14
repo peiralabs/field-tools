@@ -40,12 +40,6 @@
   .followup button { background:var(--card,#faf9f4); border:1px solid var(--accent,#116d66); color:var(--accent,#116d66);
     border-radius:2px; padding:0 20px; cursor:pointer; font-family:var(--fm,monospace); letter-spacing:.06em; font-size:11.5px; }
   .followup button:hover { background:color-mix(in srgb, var(--accent,#116d66) 8%, var(--card,#faf9f4)); }
-  /* "this one runs on claude.ai" notice, shown on the self-hosted copy */
-  .aioff { margin-bottom:18px; padding:16px 18px; border:1px solid var(--hair2,#aeac9e);
-    border-left:none; border-right:none; background:var(--card2,#e5e3d7); font-size:14px; line-height:1.65; }
-  .aioff b { font-family:var(--fd,sans-serif); color:var(--ink,#1f211b); }
-  .aioff a { color:var(--accent,#116d66); font-weight:600; text-decoration:none;
-    border-bottom:1px solid var(--accent,#116d66); white-space:nowrap; }
-  .aioff a:hover { background:color-mix(in srgb, var(--accent,#116d66) 12%, transparent); }
-  .aioff .why { display:block; margin-top:8px; font-family:var(--fm,monospace); font-size:11.5px;
-    color:var(--dim,#5b5e53); letter-spacing:.03em; }
+  /* The #aioff container is still where the model setup panel and the status
+     chip render — see llm.css. The old .aioff "runs on claude.ai" notice styles
+     were removed when that notice was replaced by the setup panel. */

@@ -1,11 +1,21 @@
-/* ---- AI helper shared by the Claude-powered field tools (FT-05..FT-08) ----
-   These call window.claude.complete, which only exists inside a claude.ai
-   artifact, so each viewer's own Claude subscription pays for the inference and
-   the tool costs us nothing to run. On the self-hosted copy the API is absent:
-   the tool renders a notice pointing at the claude.ai build instead of failing. */
+/* ---- AI helper shared by the model-powered field tools (FT-05..FT-08) ----
+   Two ways to get a model behind these tools, tried in that order:
+
+   1. window.claude.complete — exists only inside a claude.ai artifact. Costs the
+      reader nothing beyond the subscription they already have, and costs us
+      nothing to run, so it stays the default wherever it is available.
+   2. LLM — the bring-your-own-model layer, used everywhere else (including
+      peira.dev). The reader points the tool at OpenAI, Anthropic, Gemini,
+      DeepSeek, Groq, OpenRouter, a self-hosted Ollama, or any OpenAI-compatible
+      endpoint. Their key goes straight from their browser to that provider.
+
+   Before either existed the self-hosted copy simply refused to run and sent the
+   reader to claude.ai, which meant four of the eleven tools did nothing on our
+   own site. */
 const AI = (function () {
 
-  const available = () => !!(window.claude && typeof window.claude.complete === 'function');
+  const artifact = () => !!(window.claude && typeof window.claude.complete === 'function');
+  const available = () => artifact() || (typeof LLM !== 'undefined' && LLM.configured());
 
   /* Minimal markdown -> HTML. Deliberately small: it only has to render what
      the system prompts ask for (headings, bold, lists, code, fenced blocks).
@@ -75,18 +85,31 @@ const AI = (function () {
     return d;
   }
 
-  /* Renders the "runs on claude.ai" notice on the self-hosted copy and returns
-     false so callers can disable their submit control. */
+  /* Returns true when a model is already reachable. When it is not, this renders
+     the setup panel and parks the tool's run button until one is chosen — pass
+     the button's id as opts.go and guard restores its original label on success. */
   function guard(el, opts) {
-    if (available()) return true;
-    if (el) {
-      el.innerHTML =
-        `<div class="aioff"><b>This one thinks, so it lives on claude.ai.</b> ` +
-        `${opts.what} needs a model behind it, and this page is a static file with no server and no API key. ` +
-        `The working copy is published as a free, remixable artifact — ` +
-        `<a href="${opts.url}" target="_blank" rel="noopener">open ${opts.name} on claude.ai →</a>` +
-        `<span class="why">It runs on your own Claude account: nothing is sent to us, we pay nothing to run it, ` +
-        `and you can fork it and change the prompt to suit your own lab.</span></div>`;
+    opts = opts || {};
+    const btn = opts.go ? document.getElementById(opts.go) : null;
+    const label = btn ? btn.textContent : '';
+
+    if (available()) {
+      // Already set up via BYOK: leave a small chip so the choice is visible and changeable.
+      if (el && !artifact() && typeof LLMUI !== 'undefined') LLMUI.chip(el, opts);
+      return true;
+    }
+
+    if (btn) { btn.disabled = true; btn.textContent = 'Set up a model first'; }
+
+    if (el && typeof LLMUI !== 'undefined') {
+      LLMUI.render(el, {
+        what: opts.what,
+        url: opts.url,
+        onReady: () => {
+          if (btn) { btn.disabled = false; btn.textContent = label; }
+          LLMUI.chip(el, opts);
+        }
+      });
     }
     return false;
   }
@@ -99,11 +122,13 @@ const AI = (function () {
   }
 
   async function complete(prompt) {
-    if (!available())
-      throw new Error('This tool needs to run inside claude.ai — open the published artifact there.');
-    const r = await window.claude.complete(prompt);
-    if (!r || !String(r).trim()) throw new Error('The model returned nothing. Try again, or shorten the input.');
-    return String(r);
+    if (artifact()) {
+      const r = await window.claude.complete(prompt);
+      if (!r || !String(r).trim()) throw new Error('The model returned nothing. Try again, or shorten the input.');
+      return String(r);
+    }
+    if (typeof LLM !== 'undefined' && LLM.configured()) return LLM.complete(prompt);
+    throw new Error('No model is set up yet. Choose a provider above, or open this tool on claude.ai.');
   }
 
   /* One-call conversation runner used by every AI tool. */
@@ -145,5 +170,5 @@ const AI = (function () {
     };
   }
 
-  return { available, md, add, thinking, guard, buildPrompt, complete, session };
+  return { available, artifact, md, add, thinking, guard, buildPrompt, complete, session };
 })();

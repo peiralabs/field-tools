@@ -44,7 +44,10 @@ Addresses come from `10.0.0.0/16` — that is, `10.0.x.x` — or the literal `10
 Write `\x01`, not a literal control byte. A raw one survived every local test and was then silently stripped by a clipboard, turning a regex into a syntax error and breaking a published tool. The gate blocks these now.
 
 **5. Escape anything a user typed before it reaches `innerHTML`.**
-Use the shared `LabProfile.esc()`. Service names, machine names and data-set names are all user input.
+Use the shared `LabProfile.esc()`. Service names, machine names and data-set names are all user input. So is **model output** — since a reader can point the AI tools at any endpoint, a response is untrusted data, not trusted markup. `AI.md()` escapes before it does anything else and deliberately renders no links; keep it that way.
+
+**6. An API key never leaves the key box.**
+It goes in `sessionStorage` (or `localStorage` only on explicit opt-in) and travels to exactly one host: the provider the reader selected. It must never be written into the Lab Profile, included in an export or lab record, put in a URL, or logged. The profile exists to be shared; a credential in it would be handed out with it.
 
 ## Local workflow
 

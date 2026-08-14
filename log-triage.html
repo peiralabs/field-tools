@@ -83,15 +83,59 @@
   .followup button { background:var(--card,#faf9f4); border:1px solid var(--accent,#116d66); color:var(--accent,#116d66);
     border-radius:2px; padding:0 20px; cursor:pointer; font-family:var(--fm,monospace); letter-spacing:.06em; font-size:11.5px; }
   .followup button:hover { background:color-mix(in srgb, var(--accent,#116d66) 8%, var(--card,#faf9f4)); }
-  /* "this one runs on claude.ai" notice, shown on the self-hosted copy */
-  .aioff { margin-bottom:18px; padding:16px 18px; border:1px solid var(--hair2,#aeac9e);
+  /* The #aioff container is still where the model setup panel and the status
+     chip render — see llm.css. The old .aioff "runs on claude.ai" notice styles
+     were removed when that notice was replaced by the setup panel. */
+  /* ---- model setup panel (shared by FT-05..FT-08) ---- */
+  .llmset { margin-bottom:18px; padding:18px 20px; border:1px solid var(--hair2,#aeac9e);
     border-left:none; border-right:none; background:var(--card2,#e5e3d7); font-size:14px; line-height:1.65; }
-  .aioff b { font-family:var(--fd,sans-serif); color:var(--ink,#1f211b); }
-  .aioff a { color:var(--accent,#116d66); font-weight:600; text-decoration:none;
-    border-bottom:1px solid var(--accent,#116d66); white-space:nowrap; }
-  .aioff a:hover { background:color-mix(in srgb, var(--accent,#116d66) 12%, transparent); }
-  .aioff .why { display:block; margin-top:8px; font-family:var(--fm,monospace); font-size:11.5px;
-    color:var(--dim,#5b5e53); letter-spacing:.03em; }
+  .llmset > b { font-family:var(--fd,sans-serif); color:var(--ink,#1f211b); display:block; margin-bottom:6px; }
+  .llmset p { margin:0 0 14px; }
+  .lrow { display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+  .lrow label { flex:1; min-width:190px; display:flex; flex-direction:column; gap:5px;
+    font-family:var(--fm,monospace); font-size:10.5px; text-transform:uppercase;
+    letter-spacing:.14em; color:var(--dim,#5b5e53); }
+  .linput, .llmset select { background:var(--card,#faf9f4); color:var(--ink,#1f211b);
+    border:1px solid var(--hair2,#aeac9e); border-radius:2px; padding:9px 11px; font-size:13.5px;
+    font-family:var(--fb,sans-serif); width:100%; text-transform:none; letter-spacing:normal; }
+  .linput:focus, .llmset select:focus { outline:none; border-color:var(--accent,#116d66);
+    box-shadow:0 0 0 3px color-mix(in srgb, var(--accent,#116d66) 15%, transparent); }
+  .lm, .lb { font-family:var(--fm,monospace); font-size:12.5px; }
+  .lopts { display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
+  .lchk { display:flex; align-items:center; gap:7px; font-family:var(--fm,monospace);
+    font-size:11px; color:var(--dim,#5b5e53); letter-spacing:.04em; cursor:pointer; }
+  .lchk input { accent-color:var(--accent,#116d66); }
+  .lload { background:var(--card,#faf9f4); border:1px solid var(--hair2,#aeac9e); color:var(--dim,#5b5e53);
+    border-radius:2px; padding:7px 14px; cursor:pointer; font-family:var(--fm,monospace);
+    font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; }
+  .lload:hover { border-color:var(--accent,#116d66); color:var(--accent,#116d66); }
+  .lload:disabled { opacity:.5; cursor:wait; }
+  .lnote { font-family:var(--fm,monospace); font-size:11.5px; color:var(--dim,#5b5e53);
+    letter-spacing:.03em; margin:0 0 10px !important; word-break:break-word; }
+  .lnote a { color:var(--accent,#116d66); text-decoration:none; border-bottom:1px solid var(--accent,#116d66); }
+  .lw { background:color-mix(in srgb, var(--warn,#a8752a) 8%, var(--card,#faf9f4));
+    border:1px solid color-mix(in srgb, var(--warn,#a8752a) 45%, transparent); border-radius:2px;
+    padding:10px 12px; font-size:12.5px; margin:0 0 12px !important; }
+  .lw code { background:var(--card2,#e5e3d7); border-radius:2px; padding:1px 5px;
+    font-family:var(--fm,monospace); font-size:11.5px; }
+  .lact { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .lact .go { margin-top:0; }
+  .lalt { color:var(--accent,#116d66); font-size:12.5px; text-decoration:none;
+    border-bottom:1px solid var(--accent,#116d66); }
+  .lalt:hover { background:color-mix(in srgb, var(--accent,#116d66) 12%, transparent); }
+  .lpriv { display:block; margin:12px 0 0 !important; font-family:var(--fm,monospace);
+    font-size:11px; color:var(--dim,#5b5e53); letter-spacing:.03em; line-height:1.6; }
+  /* status chip once a model is chosen */
+  .llmchip { display:inline-flex; align-items:center; gap:7px; font-family:var(--fm,monospace);
+    font-size:10.5px; color:var(--dim,#5b5e53); letter-spacing:.06em; text-transform:uppercase; }
+  .llmchip b { color:var(--accent,#116d66); font-family:var(--fm,monospace); }
+  .llmchip code { font-family:var(--fm,monospace); text-transform:none; letter-spacing:0;
+    background:var(--card2,#e5e3d7); border-radius:2px; padding:1px 5px; }
+  .lchg { background:none; border:none; border-bottom:1px solid var(--hair2,#aeac9e); color:var(--dim,#5b5e53);
+    cursor:pointer; font-family:var(--fm,monospace); font-size:10.5px; letter-spacing:.06em;
+    text-transform:uppercase; padding:0 0 1px; }
+  .lchg:hover { color:var(--accent,#116d66); border-color:var(--accent,#116d66); }
+  @media (max-width:560px) { .lrow label { min-width:100%; } }
 <!-- /AI:CSS -->
 <!-- PROFILE:CSS -->
   /* ---- Lab Profile bar (shared across Peira field tools) ---- */
@@ -473,14 +517,499 @@ const LabProfile = (function () {
 })();
 <!-- /PROFILE:JS -->
 <!-- AI:JS -->
-/* ---- AI helper shared by the Claude-powered field tools (FT-05..FT-08) ----
-   These call window.claude.complete, which only exists inside a claude.ai
-   artifact, so each viewer's own Claude subscription pays for the inference and
-   the tool costs us nothing to run. On the self-hosted copy the API is absent:
-   the tool renders a notice pointing at the claude.ai build instead of failing. */
+/* ---- Bring-your-own-model layer (FT-05..FT-08) ------------------------------
+   The AI tools were born inside claude.ai artifacts, where window.claude.complete
+   exists and the viewer's own subscription pays. Everywhere else — including
+   peira.dev — that API is absent, so this layer lets the reader point the same
+   tool at a model they already pay for, or one they host themselves.
+
+   Two facts decided the shape of this file, both measured on 2026-08-14 rather
+   than assumed:
+
+   1. Every hosted provider below answers a CORS preflight from a public HTTPS
+      origin (OpenAI, Gemini and DeepSeek reflect the Origin; Anthropic, Groq and
+      OpenRouter return *). So the browser can call them directly and the key
+      never travels through anyone's server, including ours.
+
+   2. A self-hosted Ollama CANNOT be reached from https://peira.dev, by two
+      independent mechanisms: it answers a public Origin with 403, and it sends no
+      Access-Control-Allow-Private-Network, which Chrome's Private Network Access
+      rules now require for a public page to touch a private address. It does
+      allow http://localhost:* and http://127.0.0.1:* with no configuration at
+      all. So the local path is "download this file and serve it from localhost"
+      (cors-server.py in this repo does exactly that) — we explain that rather
+      than pretending it is a bug.
+
+   The API key is deliberately NOT part of the Lab Profile. The profile is
+   designed to be exported as JSON and rendered into a shareable lab record; a
+   credential must never end up in either. It lives in sessionStorage (gone when
+   the tab closes) unless the reader explicitly ticks "remember on this device". */
+const LLM = (function () {
+  'use strict';
+
+  const V_ANTHROPIC = '2023-06-01';   // long-stable API version header
+
+  const PROVIDERS = {
+    openai: {
+      label: 'OpenAI', style: 'openai', auth: 'bearer',
+      base: 'https://api.openai.com/v1', model: 'gpt-4o-mini',
+      keys: 'https://platform.openai.com/api-keys'
+    },
+    anthropic: {
+      label: 'Anthropic', style: 'anthropic', auth: 'x-api-key',
+      base: 'https://api.anthropic.com/v1', model: 'claude-sonnet-4-6',
+      keys: 'https://console.anthropic.com/settings/keys'
+    },
+    gemini: {
+      label: 'Google Gemini', style: 'gemini', auth: 'x-goog-api-key',
+      base: 'https://generativelanguage.googleapis.com/v1beta', model: 'gemini-2.0-flash',
+      keys: 'https://aistudio.google.com/apikey'
+    },
+    deepseek: {
+      label: 'DeepSeek', style: 'openai', auth: 'bearer',
+      base: 'https://api.deepseek.com', model: 'deepseek-chat',
+      keys: 'https://platform.deepseek.com/api_keys'
+    },
+    groq: {
+      label: 'Groq', style: 'openai', auth: 'bearer',
+      base: 'https://api.groq.com/openai/v1', model: '',
+      keys: 'https://console.groq.com/keys'
+    },
+    openrouter: {
+      label: 'OpenRouter', style: 'openai', auth: 'bearer',
+      base: 'https://openrouter.ai/api/v1', model: '',
+      keys: 'https://openrouter.ai/keys'
+    },
+    ollama: {
+      label: 'Ollama (self-hosted)', style: 'openai', auth: 'none', local: true,
+      base: 'http://localhost:11434/v1', model: ''
+    },
+    custom: {
+      label: 'Other OpenAI-compatible', style: 'openai', auth: 'bearer', custom: true,
+      base: '', model: ''
+    }
+  };
+
+  /* ---- storage -------------------------------------------------------------
+     Config (which provider, which model, which base URL) is not secret and can
+     persist. The key is separate and session-scoped by default. */
+  const CFG_KEY = 'peiralabs.llm.cfg';
+  const SEC_KEY = 'peiralabs.llm.key';
+
+  function store(kind) {
+    try {
+      const s = kind === 'local' ? window.localStorage : window.sessionStorage;
+      const probe = '__t' + Math.random();
+      s.setItem(probe, '1'); s.removeItem(probe);
+      return s;
+    } catch (e) { return null; }   // private mode, disabled storage, file:// in some browsers
+  }
+
+  let memKey = '';                  // always the source of truth for this tab
+
+  function loadCfg() {
+    const s = store('local');
+    if (!s) return {};
+    try { return JSON.parse(s.getItem(CFG_KEY) || '{}') || {}; } catch (e) { return {}; }
+  }
+  function saveCfg(cfg) {
+    const s = store('local');
+    if (s) { try { s.setItem(CFG_KEY, JSON.stringify(cfg)); } catch (e) {} }
+  }
+
+  function loadKey() {
+    if (memKey) return memKey;
+    for (const kind of ['session', 'local']) {
+      const s = store(kind);
+      if (s) { const v = s.getItem(SEC_KEY); if (v) { memKey = v; return v; } }
+    }
+    return '';
+  }
+  function saveKey(v, remember) {
+    memKey = v || '';
+    const ss = store('session'), ls = store('local');
+    if (ss) { try { v ? ss.setItem(SEC_KEY, v) : ss.removeItem(SEC_KEY); } catch (e) {} }
+    if (ls) {
+      try { (v && remember) ? ls.setItem(SEC_KEY, v) : ls.removeItem(SEC_KEY); } catch (e) {}
+    }
+  }
+  function remembered() {
+    const ls = store('local');
+    return !!(ls && ls.getItem(SEC_KEY));
+  }
+  function forget() { saveKey('', false); }
+
+  let cfg = loadCfg();
+
+  function current() {
+    const id = cfg.provider && PROVIDERS[cfg.provider] ? cfg.provider : '';
+    if (!id) return null;
+    const p = PROVIDERS[id];
+    return {
+      id, p,
+      base: (cfg.base || p.base || '').replace(/\/+$/, ''),
+      model: cfg.model || p.model || ''
+    };
+  }
+
+  /* Configured means: a provider is chosen, it has a model and a base, and a key
+     exists unless the provider needs none. */
+  function configured() {
+    const c = current();
+    if (!c || !c.base || !c.model) return false;
+    if (c.p.auth === 'none') return true;
+    return !!loadKey();
+  }
+
+  /* ---- request shapes ------------------------------------------------------ */
+  function headers(c, key) {
+    const h = { 'content-type': 'application/json' };
+    if (c.p.auth === 'bearer') h['Authorization'] = 'Bearer ' + key;
+    if (c.p.auth === 'x-api-key') {
+      h['x-api-key'] = key;
+      h['anthropic-version'] = V_ANTHROPIC;
+      // Anthropic requires this opt-in before it will serve a browser origin.
+      h['anthropic-dangerous-direct-browser-access'] = 'true';
+    }
+    if (c.p.auth === 'x-goog-api-key') h['x-goog-api-key'] = key;
+    return h;
+  }
+
+  function endpoint(c) {
+    if (c.p.style === 'anthropic') return c.base + '/messages';
+    if (c.p.style === 'gemini') return c.base + '/models/' + encodeURIComponent(c.model) + ':generateContent';
+    return c.base + '/chat/completions';
+  }
+
+  function body(c, prompt) {
+    if (c.p.style === 'anthropic') {
+      // max_tokens is required by this API, unlike the others.
+      return { model: c.model, max_tokens: 4096, messages: [{ role: 'user', content: prompt }] };
+    }
+    if (c.p.style === 'gemini') {
+      return { contents: [{ role: 'user', parts: [{ text: prompt }] }] };
+    }
+    // Deliberately no max_tokens: OpenAI renamed it to max_completion_tokens for
+    // newer models, and every provider here has a sane default. Omitting it is
+    // the only spelling that works everywhere.
+    return { model: c.model, messages: [{ role: 'user', content: prompt }] };
+  }
+
+  function extract(c, json) {
+    try {
+      if (c.p.style === 'anthropic') {
+        const block = (json.content || []).find(b => b && b.type === 'text');
+        return block ? block.text : '';
+      }
+      if (c.p.style === 'gemini') {
+        const cand = (json.candidates || [])[0];
+        if (!cand) return '';
+        return ((cand.content && cand.content.parts) || []).map(p => p.text || '').join('');
+      }
+      const ch = (json.choices || [])[0];
+      return ch && ch.message ? (ch.message.content || '') : '';
+    } catch (e) { return ''; }
+  }
+
+  /* ---- error translation ---------------------------------------------------
+     A blocked cross-origin or private-network request surfaces in JS as a bare
+     TypeError with no detail, which is useless to someone trying to get a local
+     model working. Turn the common cases into the actual reason. */
+  function diagnose(err, c) {
+    const httpsPage = location.protocol === 'https:';
+    const base = c ? c.base : '';
+    const isHttp = /^http:\/\//i.test(base);
+    const isLocal = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/i.test(base);
+
+    if (err && err.name === 'TypeError') {
+      if (httpsPage && isLocal) {
+        return 'The browser blocked this page from reaching ' + base + '. A page served over HTTPS ' +
+          'cannot call a local address: Chrome\'s Private Network Access rules require the local ' +
+          'server to send an Access-Control-Allow-Private-Network header, and Ollama does not. ' +
+          'Download this tool and serve it from localhost instead — cors-server.py in the repo does ' +
+          'this — and the same settings will work.';
+      }
+      if (httpsPage && isHttp) {
+        return 'The browser blocked this request. This page is HTTPS and ' + base + ' is plain HTTP, ' +
+          'which counts as mixed content. Use an HTTPS endpoint, or run this tool locally.';
+      }
+      if (isLocal) {
+        return 'Could not reach ' + base + '. Check the server is running, and that it allows this ' +
+          'page\'s origin (' + location.origin + '). Ollama allows localhost origins by default but ' +
+          'refuses others unless OLLAMA_ORIGINS is set.';
+      }
+      return 'Could not reach ' + (base || 'the endpoint') + '. That is usually a wrong base URL, ' +
+        'no network, or a server that does not allow browser requests.';
+    }
+    return err && err.message ? err.message : String(err);
+  }
+
+  async function complete(prompt) {
+    const c = current();
+    if (!c) throw new Error('No model is set up yet.');
+    const key = c.p.auth === 'none' ? '' : loadKey();
+    if (c.p.auth !== 'none' && !key) throw new Error('No API key is set for ' + c.p.label + '.');
+
+    let res;
+    try {
+      res = await fetch(endpoint(c), {
+        method: 'POST',
+        headers: headers(c, key),
+        body: JSON.stringify(body(c, prompt))
+      });
+    } catch (e) {
+      throw new Error(diagnose(e, c));
+    }
+
+    if (!res.ok) {
+      let detail = '';
+      try {
+        const j = await res.json();
+        detail = (j.error && (j.error.message || j.error.type)) || j.message || '';
+      } catch (e) { /* body was not JSON */ }
+      if (res.status === 401 || res.status === 403)
+        throw new Error('The provider rejected the key (HTTP ' + res.status + ')' +
+          (detail ? ': ' + detail : '') + '. Check it is valid and has access to ' + c.model + '.');
+      if (res.status === 404)
+        throw new Error('Not found (HTTP 404)' + (detail ? ': ' + detail : '') +
+          '. That usually means the model name "' + c.model + '" is wrong for this provider, ' +
+          'or the base URL is off. Try "Load models".');
+      if (res.status === 429)
+        throw new Error('Rate limited or out of quota (HTTP 429)' + (detail ? ': ' + detail : '') + '.');
+      throw new Error('The provider returned HTTP ' + res.status + (detail ? ': ' + detail : '') + '.');
+    }
+
+    const json = await res.json();
+    const text = extract(c, json);
+    if (!text || !String(text).trim())
+      throw new Error('The model returned nothing. Try again, or shorten the input.');
+    return String(text);
+  }
+
+  /* Ask the provider what models the key can actually see, so a stale default in
+     this file never becomes the reader's problem. */
+  async function listModels() {
+    const c = current();
+    if (!c) throw new Error('Choose a provider first.');
+    const key = c.p.auth === 'none' ? '' : loadKey();
+    const url = c.p.style === 'gemini' ? c.base + '/models' : c.base + '/models';
+    let res;
+    try {
+      res = await fetch(url, { headers: headers(c, key) });
+    } catch (e) { throw new Error(diagnose(e, c)); }
+    if (!res.ok) throw new Error('Could not list models (HTTP ' + res.status + ').');
+    const j = await res.json();
+    let ids = [];
+    if (c.p.style === 'gemini') {
+      ids = (j.models || []).map(m => String(m.name || '').replace(/^models\//, ''));
+    } else {
+      ids = (j.data || j.models || []).map(m => m.id || m.name || '');
+    }
+    return ids.filter(Boolean).sort();
+  }
+
+  return {
+    PROVIDERS, current, configured, complete, listModels, diagnose,
+    get cfg() { return cfg; },
+    setCfg(next) { cfg = Object.assign({}, cfg, next); saveCfg(cfg); },
+    getKey: loadKey, setKey: saveKey, remembered, forget,
+    hasStorage: () => !!store('session')
+  };
+})();
+
+/* ---- Model setup panel (FT-05..FT-08) --------------------------------------
+   Rendered by AI.guard() when no model is reachable, and reachable afterwards
+   from the small status chip so a reader can switch model without a reload.
+
+   Everything written into the DOM here goes through esc(), and the model list
+   returned by a provider is inserted with textContent rather than innerHTML —
+   the reader may legitimately be pointing this at an endpoint we know nothing
+   about, so its responses are treated as untrusted input. */
+const LLMUI = (function () {
+  'use strict';
+
+  const esc = s => (window.LabProfile && LabProfile.esc)
+    ? LabProfile.esc(s)
+    : String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  function options() {
+    return Object.keys(LLM.PROVIDERS).map(id =>
+      `<option value="${esc(id)}">${esc(LLM.PROVIDERS[id].label)}</option>`).join('');
+  }
+
+  /* A local endpoint reached from an HTTPS page cannot work — say so up front
+     rather than letting the reader discover it as a failed request. */
+  function localWarning(base) {
+    const isLocal = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\]|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/i.test(base || '');
+    if (!isLocal) return '';
+    if (location.protocol !== 'https:') return '';
+    return `<p class="lw">This page is served over HTTPS, so the browser will refuse to reach ` +
+      `<code>${esc(base)}</code>. Download this tool and serve it from <code>localhost</code> ` +
+      `(<code>cors-server.py</code> in the repo does this) and the same settings will work.</p>`;
+  }
+
+  function render(el, opts) {
+    opts = opts || {};
+    const cfg = LLM.cfg;
+    const cur = LLM.current();
+    const pid = cur ? cur.id : '';
+    const p = pid ? LLM.PROVIDERS[pid] : null;
+
+    el.innerHTML =
+      `<div class="llmset">
+         <b>Point this tool at a model.</b>
+         <p>${esc(opts.what || 'This tool')} needs a language model behind it. This page is a static
+            file with no server, so it calls the provider you choose directly from your browser —
+            your key goes to them, never to us.</p>
+         <div class="lrow">
+           <label>Provider
+             <select class="lprov"><option value="">Choose…</option>${options()}</select>
+           </label>
+           <label class="lbase">Base URL
+             <input class="linput lb" type="text" spellcheck="false" autocomplete="off" placeholder="https://…">
+           </label>
+         </div>
+         <div class="lrow lkeyrow">
+           <label>API key
+             <input class="linput lk" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your key">
+           </label>
+           <label class="lmodel">Model
+             <input class="linput lm" type="text" list="llm-models" spellcheck="false" autocomplete="off" placeholder="model name">
+             <datalist id="llm-models"></datalist>
+           </label>
+         </div>
+         <div class="lopts">
+           <label class="lchk"><input type="checkbox" class="lrem"> Remember the key on this device</label>
+           <button class="lload" type="button">Load models</button>
+         </div>
+         <p class="lnote"></p>
+         <div class="lwarn"></div>
+         <div class="lact">
+           <button class="go lsave" type="button">Use this model</button>
+           ${opts.url ? `<a class="lalt" href="${esc(opts.url)}" target="_blank" rel="noopener">or run it on claude.ai with no key →</a>` : ''}
+         </div>
+         <p class="lpriv">The key is held for this browser tab only unless you tick remember, is never
+            written into your Lab Profile, and is never sent anywhere except the provider you pick.</p>
+       </div>`;
+
+    const $ = s => el.querySelector(s);
+    const prov = $('.lprov'), base = $('.lb'), key = $('.lk'), model = $('.lm'),
+      rem = $('.lrem'), note = $('.lnote'), warn = $('.lwarn'), list = $('#llm-models');
+
+    function sync() {
+      const id = prov.value;
+      const def = id ? LLM.PROVIDERS[id] : null;
+      el.querySelector('.lkeyrow').style.display = (def && def.auth === 'none') ? 'none' : '';
+      el.querySelector('.lmodel').style.display = '';
+      if (def && !base.value) base.value = def.base || '';
+      if (def && !model.value) model.value = def.model || '';
+      note.textContent = def && def.keys ? '' : '';
+      if (def && def.keys) {
+        note.innerHTML = `Get a key: <a href="${esc(def.keys)}" target="_blank" rel="noopener">${esc(def.keys)}</a>`;
+      } else if (def && def.local) {
+        note.textContent = 'Ollama needs no key. It allows localhost origins by default; for any other ' +
+          'origin set OLLAMA_ORIGINS on the server.';
+      } else {
+        note.textContent = '';
+      }
+      warn.innerHTML = localWarning(base.value);
+    }
+
+    prov.value = pid || '';
+    base.value = cfg.base || (p ? p.base : '') || '';
+    model.value = cfg.model || (p ? p.model : '') || '';
+    key.value = LLM.getKey() || '';
+    rem.checked = LLM.remembered();
+    sync();
+
+    prov.addEventListener('change', () => {
+      const def = LLM.PROVIDERS[prov.value];
+      base.value = def ? (def.base || '') : '';
+      model.value = def ? (def.model || '') : '';
+      sync();
+    });
+    base.addEventListener('input', sync);
+
+    $('.lload').addEventListener('click', async function () {
+      const btn = this;
+      // Persist what is typed so listModels() sees it.
+      LLM.setCfg({ provider: prov.value, base: base.value.trim(), model: model.value.trim() });
+      if (key.value) LLM.setKey(key.value, rem.checked);
+      btn.disabled = true; btn.textContent = 'Loading…';
+      try {
+        const ids = await LLM.listModels();
+        list.textContent = '';
+        ids.forEach(id => {
+          const o = document.createElement('option');
+          o.value = id;                       // value, not innerHTML — untrusted source
+          list.appendChild(o);
+        });
+        note.textContent = ids.length + ' models available. Click the model box to pick one.';
+        // Never auto-pick an embedding or reranking model: they are commonly the
+        // first entry alphabetically (nomic-embed-text) and cannot answer a chat
+        // request, so the reader's first run would fail for no visible reason.
+        if (!model.value && ids.length) {
+          const chat = ids.find(id => !/embed|bge-|e5-|gte-|rerank/i.test(id));
+          if (chat) model.value = chat;
+        }
+      } catch (e) {
+        note.textContent = e && e.message ? e.message : String(e);
+      } finally {
+        btn.disabled = false; btn.textContent = 'Load models';
+      }
+    });
+
+    $('.lsave').addEventListener('click', () => {
+      const id = prov.value;
+      if (!id) { note.textContent = 'Choose a provider first.'; return; }
+      const b = base.value.trim(), m = model.value.trim();
+      if (!b) { note.textContent = 'A base URL is required.'; return; }
+      if (!m) { note.textContent = 'A model name is required. Try "Load models".'; return; }
+      LLM.setCfg({ provider: id, base: b, model: m });
+      if (LLM.PROVIDERS[id].auth !== 'none') {
+        if (!key.value.trim()) { note.textContent = 'This provider needs an API key.'; return; }
+        LLM.setKey(key.value.trim(), rem.checked);
+      }
+      if (opts.onReady) opts.onReady();
+    });
+
+    if (!LLM.hasStorage()) {
+      warn.innerHTML += `<p class="lw">Browser storage is unavailable here, so these settings last
+        only until you reload.</p>`;
+    }
+  }
+
+  /* Small persistent chip: shows what is in use and reopens the panel. */
+  function chip(el, opts) {
+    const c = LLM.current();
+    if (!c) return;
+    el.innerHTML = `<span class="llmchip">Model: <b>${esc(c.p.label)}</b> · <code>${esc(c.model)}</code>
+      <button type="button" class="lchg">change</button></span>`;
+    el.querySelector('.lchg').addEventListener('click', () => render(el, opts));
+  }
+
+  return { render, chip };
+})();
+
+/* ---- AI helper shared by the model-powered field tools (FT-05..FT-08) ----
+   Two ways to get a model behind these tools, tried in that order:
+
+   1. window.claude.complete — exists only inside a claude.ai artifact. Costs the
+      reader nothing beyond the subscription they already have, and costs us
+      nothing to run, so it stays the default wherever it is available.
+   2. LLM — the bring-your-own-model layer, used everywhere else (including
+      peira.dev). The reader points the tool at OpenAI, Anthropic, Gemini,
+      DeepSeek, Groq, OpenRouter, a self-hosted Ollama, or any OpenAI-compatible
+      endpoint. Their key goes straight from their browser to that provider.
+
+   Before either existed the self-hosted copy simply refused to run and sent the
+   reader to claude.ai, which meant four of the eleven tools did nothing on our
+   own site. */
 const AI = (function () {
 
-  const available = () => !!(window.claude && typeof window.claude.complete === 'function');
+  const artifact = () => !!(window.claude && typeof window.claude.complete === 'function');
+  const available = () => artifact() || (typeof LLM !== 'undefined' && LLM.configured());
 
   /* Minimal markdown -> HTML. Deliberately small: it only has to render what
      the system prompts ask for (headings, bold, lists, code, fenced blocks).
@@ -550,18 +1079,31 @@ const AI = (function () {
     return d;
   }
 
-  /* Renders the "runs on claude.ai" notice on the self-hosted copy and returns
-     false so callers can disable their submit control. */
+  /* Returns true when a model is already reachable. When it is not, this renders
+     the setup panel and parks the tool's run button until one is chosen — pass
+     the button's id as opts.go and guard restores its original label on success. */
   function guard(el, opts) {
-    if (available()) return true;
-    if (el) {
-      el.innerHTML =
-        `<div class="aioff"><b>This one thinks, so it lives on claude.ai.</b> ` +
-        `${opts.what} needs a model behind it, and this page is a static file with no server and no API key. ` +
-        `The working copy is published as a free, remixable artifact — ` +
-        `<a href="${opts.url}" target="_blank" rel="noopener">open ${opts.name} on claude.ai →</a>` +
-        `<span class="why">It runs on your own Claude account: nothing is sent to us, we pay nothing to run it, ` +
-        `and you can fork it and change the prompt to suit your own lab.</span></div>`;
+    opts = opts || {};
+    const btn = opts.go ? document.getElementById(opts.go) : null;
+    const label = btn ? btn.textContent : '';
+
+    if (available()) {
+      // Already set up via BYOK: leave a small chip so the choice is visible and changeable.
+      if (el && !artifact() && typeof LLMUI !== 'undefined') LLMUI.chip(el, opts);
+      return true;
+    }
+
+    if (btn) { btn.disabled = true; btn.textContent = 'Set up a model first'; }
+
+    if (el && typeof LLMUI !== 'undefined') {
+      LLMUI.render(el, {
+        what: opts.what,
+        url: opts.url,
+        onReady: () => {
+          if (btn) { btn.disabled = false; btn.textContent = label; }
+          LLMUI.chip(el, opts);
+        }
+      });
     }
     return false;
   }
@@ -574,11 +1116,13 @@ const AI = (function () {
   }
 
   async function complete(prompt) {
-    if (!available())
-      throw new Error('This tool needs to run inside claude.ai — open the published artifact there.');
-    const r = await window.claude.complete(prompt);
-    if (!r || !String(r).trim()) throw new Error('The model returned nothing. Try again, or shorten the input.');
-    return String(r);
+    if (artifact()) {
+      const r = await window.claude.complete(prompt);
+      if (!r || !String(r).trim()) throw new Error('The model returned nothing. Try again, or shorten the input.');
+      return String(r);
+    }
+    if (typeof LLM !== 'undefined' && LLM.configured()) return LLM.complete(prompt);
+    throw new Error('No model is set up yet. Choose a provider above, or open this tool on claude.ai.');
   }
 
   /* One-call conversation runner used by every AI tool. */
@@ -620,7 +1164,7 @@ const AI = (function () {
     };
   }
 
-  return { available, md, add, thinking, guard, buildPrompt, complete, session };
+  return { available, artifact, md, add, thinking, guard, buildPrompt, complete, session };
 })();
 <!-- /AI:JS -->
 
@@ -663,12 +1207,12 @@ const $ = id => document.getElementById(id);
 
 LabProfile.bar({ el:'pbar' });
 
-const live = AI.guard($('aioff'), {
+AI.guard($('aioff'), {
   name: 'Log Triage',
   what: 'Reading a log and telling you which line is the cause',
-  url: ARTIFACT_URL
+  url: ARTIFACT_URL,
+  go: 'go'
 });
-if (!live) { $('go').disabled = true; $('go').textContent = 'Open on claude.ai to run'; }
 
 const chat = AI.session({
   out: 'out',

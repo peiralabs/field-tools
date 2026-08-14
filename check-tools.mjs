@@ -66,6 +66,16 @@ for (const f of files) {
     if (!ipAllowed(a, b, c, d)) problems.push(`${tag} non-documentation IP: ${m[0]}`);
   }
 
+  // 4b. $() called with a bare identifier instead of a string literal.
+  //     `$` is document.getElementById, so every CALL site takes a quoted id;
+  //     only the definition (`const $ = id => ...`) uses a variable. A shell that
+  //     ate the inner quotes once turned $('aioff') into $(aioff), which parses
+  //     fine, passes --check, and then throws ReferenceError in the browser.
+  for (const m of s.matchAll(/\$\(\s*([A-Za-z_$][\w$]*)\s*\)/g)) {
+    if (m[1] === 'id') continue;                              // the definition itself
+    problems.push(`${tag} $(${m[1]}) is called with a bare identifier — expected a quoted id`);
+  }
+
   // 5 + 6. structure
   if (!s.includes('id="pbar"')) problems.push(`${tag} missing the lab-profile bar`);
   if (!/<!-- PROFILE:JS -->\n[\s\S]*LabProfile/.test(s)) problems.push(`${tag} profile layer not injected`);

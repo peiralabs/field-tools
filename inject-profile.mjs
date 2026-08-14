@@ -21,11 +21,15 @@ const read = f => readFileSync(join(here, '_shared', f), 'utf8').replace(/\s+$/,
 
 // A tool only receives the blocks whose markers it actually contains, so the
 // non-AI tools stay free of the AI shell and vice versa.
+// The bring-your-own-model layer rides inside the AI blocks rather than getting
+// markers of its own: the four AI tools already carry AI:CSS and AI:JS, and those
+// are exactly the files that need it. Order matters inside AI:JS — LLM and LLMUI
+// must be defined before ai.js closes over them.
 const BLOCKS = [
   { name: 'PROFILE:CSS', body: read('profile.css') },
   { name: 'PROFILE:JS', body: read('profile.js') },
-  { name: 'AI:CSS', body: read('ai.css') },
-  { name: 'AI:JS', body: read('ai.js') },
+  { name: 'AI:CSS', body: read('ai.css') + '\n' + read('llm.css') },
+  { name: 'AI:JS', body: read('llm.js') + '\n\n' + read('llmui.js') + '\n\n' + read('ai.js') },
 ];
 
 const files = readdirSync(here).filter(f => f.endsWith('.html')).sort();
