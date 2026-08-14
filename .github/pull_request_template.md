@@ -11,7 +11,7 @@ one thing gets reviewed and merged much faster than one that does five.
 
 - [ ] I ran `node inject-profile.mjs` if I touched anything in `_shared/`
 - [ ] `node check-tools.mjs` passes
-- [ ] Any example data I added uses documentation-range addresses (`10.0.0.x`) and placeholder hostnames — nothing from a real network
+- [ ] Any example data I added uses non-routable example addresses (`10.0.x.x`, i.e. `10.0.0.0/16`) and placeholder hostnames — nothing from a real network
 - [ ] I didn't edit inside a generated block (between `<!-- PROFILE:JS -->` style markers)
 - [ ] Anything newly clickable is reachable by keyboard (a real `<button>`, or `tabindex` + `role` + an Enter/Space handler)
 

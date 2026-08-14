@@ -210,7 +210,7 @@ It lives in `localStorage` on one origin and goes nowhere near a server — whic
 - **The seven offline tools make no network calls at all** once loaded — all arithmetic happens in the page, and anything you save stays in your browser.
 - **The four AI tools** send what you type to **your own Claude account** via the in-artifact API. Nothing reaches me. I never see any of it, and I pay nothing to run them — which is precisely why they can stay free.
 - **One third-party request exists** and it would be dishonest not to name it: the pages load their typeface from Google Fonts. That's it. If that bothers you, self-host the two font families and delete the `<link>`.
-- **Every address shipped here is a non-routable example** — `10.0.0.x` from the [RFC 1918](https://datatracker.ietf.org/doc/html/rfc1918) private range, plus the [RFC 6598](https://datatracker.ietf.org/doc/html/rfc6598) shared-address range base `100.64.0.0` where a tool needs to talk about CGNAT. Hostnames are placeholders. **No real network is described anywhere in this repo**, and the gate fails the build if an address outside those ranges appears.
+- **Every address shipped here is a non-routable example** — `10.0.x.x` (that is, `10.0.0.0/16`) from the [RFC 1918](https://datatracker.ietf.org/doc/html/rfc1918) private range, plus the [RFC 6598](https://datatracker.ietf.org/doc/html/rfc6598) shared-address range base `100.64.0.0` where a tool needs to talk about CGNAT. Hostnames are placeholders. **No real network is described anywhere in this repo**, and the gate fails the build if an address outside those ranges appears.
 
 Still: **scrub tokens, passwords and public IPs before pasting logs or configs into anything**, including these.
 
@@ -254,7 +254,7 @@ node check-tools.mjs             # the gate
 | Every `<script>` parses | Obvious, but cheap insurance across eleven files |
 | **No raw control characters** | A literal control byte used as a sentinel survived every local test, then got silently stripped by a clipboard and broke a published tool. Use `\xNN` escapes. |
 | No unfilled `ARTIFACT_URL` | A placeholder shipping to production is a dead link |
-| Addresses stay in documentation ranges | The publication-safety rule above, enforced rather than remembered |
+| Addresses stay in the non-routable example ranges | The publication-safety rule above, enforced rather than remembered |
 | Shared layer is freshly injected | Catches "edited `_shared/` and forgot to run the injector" |
 
 CI runs it on every push and pull request.

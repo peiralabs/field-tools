@@ -38,7 +38,7 @@ Shared code lives in `_shared/` and is stamped into each tool between markers:
 Edit `_shared/`, then run the injector. Editing a copy inside a tool works exactly until someone runs the injector and silently overwrites you.
 
 **3. Documentation-range example data only.**
-Addresses come from `10.0.0.0/24`, or the literal `100.64.0.0` range base. Hostnames are placeholders. Nothing from a real network, ever — these files are public and screenshots of them go in a public README. The gate enforces this.
+Addresses come from `10.0.0.0/16` — that is, `10.0.x.x` — or the literal `100.64.0.0` range base. Hostnames are placeholders. Nothing from a real network, ever — these files are public and screenshots of them go in a public README. The gate enforces this.
 
 **4. Escape sequences, never raw control characters.**
 Write `\x01`, not a literal control byte. A raw one survived every local test and was then silently stripped by a clipboard, turning a regex into a syntax error and breaking a published tool. The gate blocks these now.

@@ -26,7 +26,7 @@ const warn = [];
 // security scanner allows; anything else that looks like a host IP is a leak risk.
 const IP = /\b(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})\b/g;
 const ipAllowed = (a, b, c, d) => {
-  if (a === 10 && b === 0) return true;                       // 10.0.0.0/16 documentation space
+  if (a === 10 && b === 0) return true;                       // 10.0.0.0/16, RFC 1918 private space
   if (a === 100 && b === 64 && c === 0 && d === 0) return true; // literal CGNAT range base
   if (a === 0 || a === 127) return true;                      // 0.0.0.0 / loopback
   if (a === 255 || (a === 192 && b === 0 && c === 2)) return true; // masks, TEST-NET-1
