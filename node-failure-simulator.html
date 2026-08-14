@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Node Failure Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:#eeede6; --card:#faf9f4; --card2:#e5e3d7;
+    --ink:#1f211b; --dim:#5b5e53; --faint:#8a8c7f;
+    --hair:#cbc9bc; --hair2:#aeac9e;
+    --accent:#2b5cad; /* drafting blue */
+    --ok:#316b3b; --bad:#a8352a; --warn:#9a6c00;
+    --grid:rgba(43,92,173,.07);
+    --fd:'Chakra Petch',system-ui,sans-serif; --fb:'IBM Plex Sans',system-ui,sans-serif;
+    --fm:'IBM Plex Mono',ui-monospace,SFMono-Regular,monospace;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body {
+    background:var(--paper); color:var(--ink); font-family:var(--fb); font-size:15px; line-height:1.55;
+    padding:40px 24px 56px; min-height:100vh;
+    background-image:linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:28px 28px;
+  }
+  ::selection { background:var(--accent); color:var(--paper); }
+  .wrap { max-width:1000px; margin:0 auto; }
+  .dochead { display:flex; justify-content:space-between; align-items:flex-end; gap:18px; flex-wrap:wrap; border-bottom:2px solid var(--ink); padding-bottom:14px; position:relative; }
+  .dochead::after { content:""; position:absolute; left:0; right:0; bottom:-5px; height:1px; background:var(--ink); }
+  h1 { font-family:var(--fd); font-size:clamp(26px,4vw,36px); font-weight:700; letter-spacing:-.01em; line-height:1.1; }
+  h1 span { box-shadow:0 3px 0 0 var(--accent); }
+  .docmeta { font-family:var(--fm); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); white-space:nowrap; padding-bottom:5px; display:flex; align-items:center; gap:9px; }
+  .docmeta::before { content:""; width:9px; height:9px; background:var(--accent); flex:none; }
+  .sub { color:var(--dim); margin:20px 0 8px; font-size:15px; max-width:64ch; }
+  h2 { font-family:var(--fm); font-size:11px; font-weight:500; text-transform:uppercase; letter-spacing:.18em; color:var(--dim); margin:30px 0 12px; display:flex; align-items:center; gap:12px; }
+  h2::after { content:""; flex:1; height:1px; background:var(--hair2); }
+  .nodes { display:grid; grid-template-columns:repeat(auto-fill,minmax(235px,1fr)); gap:12px; }
+  .node { background:var(--card); border:1px solid var(--hair); border-radius:3px; padding:15px; transition:border-color .15s, background-color .15s; }
+  .node.dead { border-color:var(--bad); background:color-mix(in srgb, var(--bad) 4%, var(--card)); background-image:repeating-linear-gradient(45deg, transparent 0 7px, rgba(168,53,42,.06) 7px 8px); }
+  .node.dead .spec, .node.dead .chips { opacity:.6; }
+  .node h3 { font-family:var(--fd); font-size:15px; font-weight:600; display:flex; justify-content:space-between; align-items:center; }
+  .kill { font-family:var(--fm); letter-spacing:.06em; background:var(--card); border:1px solid var(--hair2); color:var(--dim); border-radius:2px; padding:4px 12px; font-size:11px; cursor:pointer; transition:all .12s; }
+  .kill:hover { border-color:var(--bad); color:var(--bad); }
+  .node.dead .kill { border-color:var(--ok); color:var(--ok); }
+  .spec { color:var(--faint); font-size:11.5px; margin:4px 0 12px; font-family:var(--fm); }
+  .bar { height:9px; background:var(--card2); border:1px solid var(--hair); margin:4px 0; }
+  .bar i { display:block; height:100%; background:var(--accent); transition:width .3s ease; }
+  .bar i.hot { background:repeating-linear-gradient(45deg, var(--warn) 0 5px, #b8860b 5px 10px); }
+  .bar i.over { background:repeating-linear-gradient(45deg, var(--bad) 0 5px, #7d2019 5px 10px); }
+  .barlbl { font-size:10.5px; color:var(--faint); display:flex; justify-content:space-between; font-family:var(--fm); letter-spacing:.06em; text-transform:uppercase; }
+  .chips { margin-top:10px; display:flex; flex-wrap:wrap; gap:5px; }
+  .chip { font-size:11px; font-family:var(--fm); padding:2px 9px; border-radius:2px; background:var(--paper); border:1px solid var(--hair); color:var(--dim); }
+  .chip.adopted { border-color:var(--warn); color:var(--warn); background:color-mix(in srgb, var(--warn) 7%, var(--paper)); }
+  .stranded { background:color-mix(in srgb, var(--bad) 5%, var(--card)); border:1px solid var(--bad); border-radius:3px; padding:16px 18px; margin-top:16px; }
+  .stranded h3 { color:var(--bad); font-family:var(--fd); font-size:14.5px; margin-bottom:6px; }
+  .stranded p { font-size:13.5px; color:var(--dim); }
+  .stranded b { color:var(--ink); }
+  .allok { background:color-mix(in srgb, var(--ok) 5%, var(--card)); border:1px solid var(--ok); border-radius:3px; padding:14px 18px; margin-top:16px; font-size:14px; color:var(--ok); }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; color:var(--dim); font-weight:500; font-size:10px; text-transform:uppercase; letter-spacing:.14em; font-family:var(--fm); padding:6px 8px; border-bottom:2px solid var(--ink); }
+  td { padding:5px 8px; border-top:1px solid var(--hair); }
+  td input, td select { background:var(--card); color:var(--ink); border:1px solid var(--hair2); border-radius:2px; padding:5px 7px; font-size:13px; width:100%; font-family:var(--fb); }
+  td input:focus, td select:focus { outline:none; border-color:var(--accent); }
+  td input[type=number] { width:64px; font-family:var(--fm); }
+  .del { background:none; border:none; color:var(--faint); cursor:pointer; font-size:14px; }
+  .del:hover { color:var(--bad); }
+  .add { font-family:var(--fm); letter-spacing:.06em; background:none; border:1px dashed var(--hair2); color:var(--dim); border-radius:2px; padding:7px 16px; font-size:11.5px; cursor:pointer; margin-top:10px; transition:all .12s; }
+  .add:hover { border-color:var(--accent); color:var(--accent); }
+  .cols { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.4fr); gap:20px; align-items:start; }
+  @media (max-width:800px){ .cols { grid-template-columns:minmax(0,1fr); } }
+  .tscroll { overflow-x:auto; }
+  .tscroll table { min-width:330px; }
+  .panel { background:var(--card); border:1px solid var(--hair); border-radius:3px; padding:16px; }
+  .foot { margin-top:44px; border-top:2px solid var(--ink); padding-top:12px; font-size:12.5px; line-height:1.7; color:var(--dim); font-family:var(--fm); }
+  .foot a { color:var(--accent); text-decoration:none; border-bottom:1px solid var(--accent); }
+  .foot a:hover { background:color-mix(in srgb, var(--accent) 12%, transparent); }
+  .foot b { color:var(--ink); font-weight:600; letter-spacing:.06em; }
+<!-- PROFILE:CSS -->
+  /* ---- Lab Profile bar (shared across Peira field tools) ---- */
+  .pbar { display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin:0 0 22px;
+    padding:8px 12px; background:var(--card2,#e5e3d7); border:1px solid var(--hair,#cbc9bc);
+    border-radius:3px; font-family:var(--fm,monospace); font-size:11px; color:var(--dim,#5b5e53); }
+  .pbar .pdot { width:7px; height:7px; flex:none; background:var(--faint,#8a8c7f); border-radius:50%; }
+  .pbar.on .pdot { background:var(--accent,#116d66); }
+  .pbar .ptxt { flex:1 1 190px; letter-spacing:.05em; text-transform:uppercase; line-height:1.5; }
+  .pbar .pacts { display:flex; gap:6px; flex-wrap:wrap; }
+  .pbtn { font-family:var(--fm,monospace); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;
+    border:1px solid var(--hair2,#aeac9e); background:var(--card,#faf9f4); color:var(--dim,#5b5e53);
+    border-radius:2px; padding:4px 9px; cursor:pointer; transition:color .12s,border-color .12s; }
+  .pbtn:hover { color:var(--accent,#116d66); border-color:var(--accent,#116d66); }
+  .pbtn[disabled] { opacity:.4; cursor:not-allowed; }
+  .pbtn[disabled]:hover { color:var(--dim,#5b5e53); border-color:var(--hair2,#aeac9e); }
+  .ptoast { position:fixed; left:50%; bottom:26px; transform:translateX(-50%);
+    background:var(--slate,#23251d); color:var(--slatetext,#edebdd); font-family:var(--fm,monospace);
+    font-size:12px; padding:9px 18px; border-radius:3px; z-index:60; animation:ptin .2s ease both; }
+  @keyframes ptin { from { opacity:0; transform:translate(-50%,8px); } }
+  .pmodal { position:fixed; inset:0; background:rgba(31,33,27,.55); z-index:70;
+    display:flex; align-items:center; justify-content:center; padding:24px; animation:ptin .18s ease both; }
+  .pmbox { background:var(--card,#faf9f4); border:1px solid var(--hair2,#aeac9e); border-radius:4px;
+    width:100%; max-width:680px; max-height:86vh; display:flex; flex-direction:column; padding:22px 24px; }
+  .pmbox h3 { font-family:var(--fd,sans-serif); font-size:19px; font-weight:600; margin-bottom:6px; color:var(--ink,#1f211b); }
+  .pmbox p { font-size:13.5px; color:var(--dim,#5b5e53); margin-bottom:12px; line-height:1.6; }
+  .pmbox textarea { width:100%; flex:1; min-height:220px; background:var(--slate,#23251d);
+    color:var(--slatetext,#edebdd); border:1px solid var(--hair2,#aeac9e); border-radius:3px;
+    padding:12px 14px; font-family:var(--fm,monospace); font-size:12px; line-height:1.6; resize:vertical; }
+  .pmbox textarea:focus { outline:none; border-color:var(--accent,#116d66); }
+  .pmacts { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+  /* keyboard users get a visible ring on the div/span controls the tools use */
+  .svc:focus-visible, .chip:focus-visible, [role="button"]:focus-visible, [role="checkbox"]:focus-visible {
+    outline:2px solid var(--accent,#116d66); outline-offset:2px; }
+<!-- /PROFILE:CSS -->
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="dochead">
+    <h1>Node <span>Failure Simulator</span></h1>
+    <div class="docmeta">peira.dev · FT-02 · failure domains</div>
+  </div>
+  <p class="sub">Model your cluster, kill a node, and see whether the survivors can actually carry the load — before reality runs the test for you.</p>
+
+  <div id="pbar"></div>
+
+  <h2>Cluster</h2>
+  <div class="nodes" id="nodes"></div>
+  <div id="verdict"></div>
+
+  <div class="cols">
+    <div>
+      <h2>Nodes</h2>
+      <div class="panel">
+        <div class="tscroll"><table id="nodeTable"><thead><tr><th>Name</th><th>Cores</th><th>RAM GB</th><th></th></tr></thead><tbody></tbody></table></div>
+        <button class="add" id="addNode">+ add node</button>
+      </div>
+    </div>
+    <div>
+      <h2>Guests (VMs / containers)</h2>
+      <div class="panel">
+        <div class="tscroll"><table id="guestTable"><thead><tr><th>Name</th><th>Cores</th><th>RAM GB</th><th>Node</th><th>Priority</th><th></th></tr></thead><tbody></tbody></table></div>
+        <button class="add" id="addGuest">+ add guest</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">Failover here is a greedy fit: critical guests place first, RAM is the hard constraint, CPU allows 2&times; overcommit. Real HA needs shared or replicated storage too — a guest whose disk died with its node isn't "migrating" anywhere. A <b>Peira Labs</b> field tool · <a href="https://peira.dev" target="_blank" rel="noopener">peira.dev</a>.</p>
+</div>
+
+<script>
+<!-- PROFILE:JS -->
+/* ---- Lab Profile: shared state across Peira Labs field tools ----
+   One profile per browser origin. On peira.dev every tool reads and writes
+   the same record, so a lab described once flows into all of them. Inside the
+   claude.ai artifact sandbox localStorage is unavailable, so it degrades to
+   in-memory for the session and the JSON export becomes the way to carry it. */
+const LabProfile = (function () {
+  const KEY = 'peira.lab.v1';
+  const BLANK = { v:1, updated:null, services:[], scale:null, sizing:null,
+                  nodes:[], guests:[], datasets:[], power:null, deps:null, handover:null };
+  let mem = null, durable = false;
+  try { localStorage.setItem('__pt', '1'); localStorage.removeItem('__pt'); durable = true; } catch (e) { durable = false; }
+
+  const subs = [];
+  const clone = o => JSON.parse(JSON.stringify(o));
+
+  function get() {
+    if (mem) return mem;
+    if (durable) {
+      try {
+        const raw = localStorage.getItem(KEY);
+        if (raw) { const o = JSON.parse(raw); if (o && o.v === 1) mem = Object.assign(clone(BLANK), o); }
+      } catch (e) { /* corrupt or blocked — fall through to blank */ }
+    }
+    if (!mem) mem = clone(BLANK);
+    return mem;
+  }
+
+  function persist() {
+    if (!durable) return;
+    try { localStorage.setItem(KEY, JSON.stringify(mem)); } catch (e) { /* quota or blocked */ }
+  }
+
+  function set(patch) {
+    const p = get();
+    Object.assign(p, patch);
+    p.v = 1;
+    p.updated = new Date().toISOString().slice(0, 10);
+    persist();
+    subs.forEach(f => { try { f(p); } catch (e) {} });
+    return p;
+  }
+
+  function clear() {
+    mem = clone(BLANK);
+    if (durable) { try { localStorage.removeItem(KEY); } catch (e) {} }
+    subs.forEach(f => { try { f(mem); } catch (e) {} });
+    return mem;
+  }
+
+  function isEmpty(p) {
+    p = p || get();
+    return !p.services.length && !p.nodes.length && !p.guests.length &&
+           !p.datasets.length && !p.power && !p.deps && !p.handover && !p.sizing;
+  }
+
+  const esc = s => String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+  /* ---- summary + AI context ---- */
+  function summary(p) {
+    p = p || get();
+    const bits = [];
+    if (p.nodes.length)    bits.push(p.nodes.length + ' node' + (p.nodes.length > 1 ? 's' : ''));
+    if (p.guests.length)   bits.push(p.guests.length + ' guest' + (p.guests.length > 1 ? 's' : ''));
+    if (p.services.length) bits.push(p.services.length + ' service' + (p.services.length > 1 ? 's' : ''));
+    if (p.datasets.length) bits.push(p.datasets.length + ' data set' + (p.datasets.length > 1 ? 's' : ''));
+    if (p.power)           bits.push('power plan');
+    if (p.deps)            bits.push('dependency map');
+    if (p.handover)        bits.push('handover');
+    return bits.join(' · ');
+  }
+
+  // Compact plain-text description for AI tools to prepend as lab context.
+  function ctx() {
+    const p = get();
+    if (isEmpty(p)) return '';
+    const L = [];
+    if (p.nodes.length)
+      L.push('Nodes: ' + p.nodes.map(n => `${n.name} (${n.cores}c/${n.ram}GB)`).join(', '));
+    if (p.guests.length)
+      L.push('Guests: ' + p.guests.map(g => `${g.name} on ${g.node} (${g.cores}c/${g.ram}GB)`).join(', '));
+    if (p.services.length) L.push('Services: ' + p.services.join(', '));
+    if (p.datasets.length)
+      L.push('Data sets: ' + p.datasets.map(d => `${d.name} ~${d.size}GB`).join(', '));
+    if (p.power && p.power.ups) L.push(`UPS: ${p.power.ups}W load, ${p.power.runtime} min runtime`);
+    return "The user's lab, from their saved profile (use it to make the answer specific; " +
+           "do not assume anything not listed):\n" + L.join('\n');
+  }
+
+  /* ---- Markdown lab document ---- */
+  const PRI_NAME = { 1:'critical', 2:'normal', 3:'best-effort' };
+  function doc() {
+    const p = get();
+    const out = ['# Homelab field record', ''];
+    out.push('Generated ' + (p.updated || new Date().toISOString().slice(0, 10)) +
+             ' with the Peira Labs field tools (https://peira.dev/tools/).', '');
+    if (isEmpty(p)) {
+      out.push('_No lab details recorded yet. Fill in any field tool and press **Save to profile**._');
+      return out.join('\n');
+    }
+    if (p.sizing) {
+      out.push('## Sizing target', '',
+        `- Cores: ${p.sizing.cores}`,
+        `- RAM: ${p.sizing.ram} GB`,
+        `- Live data: ${p.sizing.data} TB`,
+        `- Backup space: ${p.sizing.backup} TB`);
+      if (p.sizing.rec) out.push(`- Recommendation: ${p.sizing.rec}`);
+      out.push('');
+    }
+    if (p.services.length) out.push('## Services', '', p.services.map(s => '- ' + s).join('\n'), '');
+    if (p.nodes.length) {
+      out.push('## Nodes', '', '| Node | Cores | RAM (GB) |', '|---|---|---|');
+      p.nodes.forEach(n => out.push(`| ${n.name} | ${n.cores} | ${n.ram} |`));
+      out.push('');
+    }
+    if (p.guests.length) {
+      out.push('## Guests', '', '| Guest | Host node | Cores | RAM (GB) | Priority |', '|---|---|---|---|---|');
+      p.guests.forEach(g => out.push(`| ${g.name} | ${g.node} | ${g.cores} | ${g.ram} | ${PRI_NAME[g.pri] || g.pri} |`));
+      out.push('');
+    }
+    if (p.datasets.length) {
+      out.push('## Data and backups', '', '| Data set | Size (GB) | Snapshots | 2nd device | Offsite | Cold |', '|---|---|---|---|---|---|');
+      p.datasets.forEach(d => out.push(
+        `| ${d.name} | ${d.size} | ${d.snap ? 'yes' : 'no'} | ${d.dev2 ? 'yes' : 'no'} | ${d.off ? 'yes' : 'no'} | ${d.cold ? 'yes' : 'no'} |`));
+      out.push('');
+    }
+    if (p.power) {
+      out.push('## Power loss', '');
+      if (p.power.ups) out.push(`- UPS load: ${p.power.ups} W`, `- Estimated runtime: ${p.power.runtime} min`);
+      if (p.power.shutdown && p.power.shutdown.length) {
+        out.push('', '**Shutdown order** (first to last):', '');
+        p.power.shutdown.forEach((m, i) => out.push(`${i + 1}. ${m}`));
+      }
+      if (p.power.boot && p.power.boot.length) {
+        out.push('', '**Boot order** (first to last):', '');
+        p.power.boot.forEach((m, i) => out.push(`${i + 1}. ${m}`));
+      }
+      out.push('');
+    }
+    if (p.deps && p.deps.items && p.deps.items.length) {
+      out.push('## Dependencies', '', '| Service | Depends on |', '|---|---|');
+      p.deps.items.forEach(it => out.push(`| ${it.name} | ${(it.needs || []).join(', ') || '—'} |`));
+      if (p.deps.spof && p.deps.spof.length)
+        out.push('', '**Single points of failure:** ' + p.deps.spof.join(', '));
+      out.push('');
+    }
+    if (p.handover) {
+      out.push('## If someone else has to run this', '');
+      Object.keys(p.handover).forEach(k => {
+        // entries are { q, a }; a bare string is an older profile, keyed by question text
+        const v = p.handover[k];
+        const q = (v && typeof v === 'object') ? v.q : k;
+        const a = (v && typeof v === 'object') ? v.a : v;
+        if (a) out.push(`### ${q}`, '', a, '');
+      });
+    }
+    out.push('---', '', 'Built with free field tools at https://peira.dev/tools/');
+    return out.join('\n');
+  }
+
+  /* ---- text modal (works where downloads are blocked) ----
+     Returns the backdrop element so callers can extend it safely rather than
+     re-querying the document (which would find an older modal if one is open). */
+  function showText(title, desc, text, filename) {
+    const back = document.createElement('div');
+    back.className = 'pmodal';
+    back.innerHTML =
+      `<div class="pmbox"><h3>${esc(title)}</h3><p>${esc(desc)}</p>` +
+      `<textarea readonly spellcheck="false"></textarea>` +
+      `<div class="pmacts"><button class="pbtn" data-a="copy">Copy</button>` +
+      `<button class="pbtn" data-a="dl">Download</button>` +
+      `<button class="pbtn" data-a="close">Close</button></div></div>`;
+    const ta = back.querySelector('textarea');
+    ta.value = text;
+    const close = () => back.remove();
+    back.addEventListener('click', e => { if (e.target === back) close(); });
+    back.querySelector('[data-a="close"]').onclick = close;
+    back.querySelector('[data-a="copy"]').onclick = async () => {
+      let ok = false;
+      try { await navigator.clipboard.writeText(text); ok = true; } catch (e) {}
+      if (!ok) { try { ta.select(); ok = document.execCommand('copy'); } catch (e) {} }
+      toast(ok ? 'Copied to clipboard' : 'Select the text and copy manually');
+    };
+    back.querySelector('[data-a="dl"]').onclick = () => {
+      try {
+        const url = URL.createObjectURL(new Blob([text], { type:'text/plain;charset=utf-8' }));
+        const a = document.createElement('a');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click();
+        setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
+      } catch (e) { toast('Download blocked here — use Copy'); }
+    };
+    document.body.appendChild(back);
+    ta.focus();
+    return back;
+  }
+
+  let toastEl = null;
+  function toast(msg) {
+    if (toastEl) toastEl.remove();
+    toastEl = document.createElement('div');
+    toastEl.className = 'ptoast';
+    toastEl.textContent = msg;
+    document.body.appendChild(toastEl);
+    const mine = toastEl;
+    setTimeout(() => { if (mine === toastEl) { mine.remove(); toastEl = null; } }, 2600);
+  }
+
+  function importText(raw) {
+    const o = JSON.parse(raw);
+    if (!o || o.v !== 1) throw new Error('That is not a Peira lab profile (expected v1).');
+    mem = Object.assign(clone(BLANK), o);
+    persist();
+    subs.forEach(f => { try { f(mem); } catch (e) {} });
+    return mem;
+  }
+
+  /* ---- the bar ----
+     opts: { el, save?: () => patch, load?: (profile) => void, syncs?: string } */
+  function bar(opts) {
+    opts = opts || {};
+    const host = document.getElementById(opts.el || 'pbar');
+    if (!host) return;
+
+    function render() {
+      const p = get();
+      const empty = isEmpty(p);
+      const s = summary(p);
+      host.className = 'pbar' + (empty ? '' : ' on');
+      const note = empty
+        ? (durable ? 'No lab profile yet — tools on this site share one'
+                   : 'Session-only profile (this sandbox blocks storage)')
+        : 'Lab profile: ' + s + (durable ? '' : ' · session only');
+      host.innerHTML =
+        `<span class="pdot"></span><span class="ptxt">${esc(note)}</span>` +
+        `<span class="pacts">` +
+        (opts.save ? `<button class="pbtn" data-a="save" title="Write this tool's data into your shared lab profile">Save to profile</button>` : '') +
+        (opts.load ? `<button class="pbtn" data-a="load"${empty ? ' disabled' : ''} title="Fill this tool in from your saved profile">Load</button>` : '') +
+        `<button class="pbtn" data-a="doc"${empty ? ' disabled' : ''} title="Export your whole lab as a Markdown document">Lab doc</button>` +
+        `<button class="pbtn" data-a="json" title="Export or import the profile as JSON">JSON</button>` +
+        (empty ? '' : `<button class="pbtn" data-a="clear" title="Delete the saved profile">Clear</button>`) +
+        `</span>`;
+
+      host.querySelectorAll('.pbtn').forEach(b => b.onclick = () => act(b.dataset.a));
+    }
+
+    function act(a) {
+      if (a === 'save') {
+        try {
+          const patch = opts.save();
+          if (patch) { set(patch); toast('Saved to lab profile' + (durable ? '' : ' (session only)')); }
+        } catch (e) { toast('Could not save: ' + e.message); }
+      } else if (a === 'load') {
+        // Load replaces what is on screen — that is more destructive than Clear,
+        // which only drops the stored copy, so it gets the confirmation too.
+        if (!confirm('Load from your lab profile? Anything you have typed into this tool will be replaced.')) return;
+        try { opts.load(get()); toast('Loaded from lab profile'); }
+        catch (e) { toast('Could not load: ' + e.message); }
+      } else if (a === 'doc') {
+        showText('Your lab, documented',
+          'A Markdown record of everything your field tools know about this lab. Paste it into your notes, wiki, or repo.',
+          doc(), 'homelab-field-record.md');
+      } else if (a === 'json') {
+        showJson();
+      } else if (a === 'clear') {
+        if (confirm('Delete the saved lab profile? This cannot be undone.')) { clear(); toast('Profile cleared'); }
+      }
+    }
+
+    function showJson() {
+      const back = showText('Lab profile (JSON)',
+        'Copy this to move your profile to another browser, or into the claude.ai copies of these tools. To restore one, paste it in and press Import.',
+        JSON.stringify(get(), null, 2), 'peira-lab-profile.json');
+      const box = back.querySelector('.pmacts');
+      const ta = back.querySelector('textarea');
+      ta.removeAttribute('readonly');
+      const b = document.createElement('button');
+      b.className = 'pbtn'; b.textContent = 'Import';
+      b.onclick = () => {
+        try { importText(ta.value); toast('Profile imported'); back.remove(); }
+        catch (e) { toast('Invalid profile: ' + e.message); }
+      };
+      box.insertBefore(b, box.firstChild);
+    }
+
+    subs.push(render);
+    render();
+  }
+
+  return { get, set, clear, isEmpty, esc, summary, ctx, doc, bar, toast, showText,
+           import: importText, durable, on: f => subs.push(f) };
+})();
+<!-- /PROFILE:JS -->
+
+let nodes = [
+  { name:'node1', cores:4, ram:16, alive:true },
+  { name:'node2', cores:4, ram:16, alive:true },
+  { name:'node3', cores:4, ram:16, alive:true },
+];
+let guests = [
+  { name:'media-server',   cores:2, ram:4, node:'node1', pri:2 },
+  { name:'arr-stack',      cores:2, ram:3, node:'node1', pri:3 },
+  { name:'home-assistant', cores:1, ram:2, node:'node2', pri:1 },
+  { name:'monitoring',     cores:2, ram:3, node:'node2', pri:2 },
+  { name:'dns-proxy',      cores:1, ram:1, node:'node3', pri:1 },
+  { name:'llm-runner',     cores:4, ram:8, node:'node3', pri:3 },
+];
+const PRI = { 1:'critical', 2:'normal', 3:'best-effort' };
+const $ = id => document.getElementById(id);
+const esc = LabProfile.esc;
+
+function simulate() {
+  const alive = nodes.filter(n => n.alive);
+  const load = {};                                            // per-node placed guests
+  alive.forEach(n => load[n.name] = []);
+  guests.filter(g => alive.some(n => n.name === g.node)).forEach(g => load[g.node].push({ g, adopted:false }));
+
+  const displaced = guests.filter(g => nodes.some(n => !n.alive && n.name === g.node))
+                          .sort((a, b) => a.pri - b.pri);
+  const stranded = [];
+  displaced.forEach(g => {
+    const fits = alive.map(n => {
+      const used = load[n.name].reduce((s, p) => s + p.g.ram, 0);
+      const cUsed = load[n.name].reduce((s, p) => s + p.g.cores, 0);
+      return { n, freeRam: n.ram - used, freeCores: n.cores * 2 - cUsed };
+    }).filter(f => f.freeRam >= g.ram && f.freeCores >= g.cores)
+      .sort((a, b) => b.freeRam - a.freeRam);
+    if (fits.length) load[fits[0].n.name].push({ g, adopted:true });
+    else stranded.push(g);
+  });
+  return { load, stranded };
+}
+
+function render() {
+  const { load, stranded } = simulate();
+  $('nodes').innerHTML = nodes.map(n => {
+    const placed = n.alive ? load[n.name] : [];
+    const ram = placed.reduce((s, p) => s + p.g.ram, 0);
+    const pct = Math.min(100, Math.round(ram / n.ram * 100));
+    const cls = pct > 100 ? 'over' : pct > 85 ? 'hot' : '';
+    const chips = n.alive
+      ? placed.map(p => `<span class="chip${p.adopted ? ' adopted' : ''}">${esc(p.g.name)}${p.adopted ? ' ↩' : ''}</span>`).join('')
+      : guests.filter(g => g.node === n.name).map(g => `<span class="chip">${esc(g.name)}</span>`).join('');
+    return `<div class="node${n.alive ? '' : ' dead'}">
+      <h3>${esc(n.name)} <button class="kill" data-n="${esc(n.name)}">${n.alive ? 'kill' : 'revive'}</button></h3>
+      <div class="spec">${n.cores} cores · ${n.ram} GB RAM</div>
+      <div class="bar"><i class="${cls}" style="width:${n.alive ? pct : 0}%"></i></div>
+      <div class="barlbl"><span>RAM ${n.alive ? ram : 0}/${n.ram} GB</span><span>${n.alive ? pct + '%' : 'DOWN'}</span></div>
+      <div class="chips">${chips}</div></div>`;
+  }).join('');
+  document.querySelectorAll('.kill').forEach(b => b.onclick = () => {
+    const n = nodes.find(x => x.name === b.dataset.n); n.alive = !n.alive; render();
+  });
+
+  const dead = nodes.filter(n => !n.alive).length;
+  $('verdict').innerHTML = !guests.length
+    ? `<div class="allok" style="color:var(--dim);border-color:var(--hair2);background:var(--card)">
+       No guests to place yet — add a VM or container below, or tick your services in the
+       <b>sizing calculator</b> and load the profile here.</div>`
+    : stranded.length
+    ? `<div class="stranded"><h3>✗ ${stranded.length} guest${stranded.length > 1 ? 's' : ''} stranded</h3>
+       <p>${stranded.map(g => `<b>${esc(g.name)}</b> (${g.ram} GB, ${PRI[g.pri]})`).join(', ')} — no surviving node has room.
+       That's your headroom gap: add RAM, add a node, or decide now which workloads are allowed to die.</p></div>`
+    : dead
+      ? `<div class="allok">✓ All guests placed — the survivors absorb the failure. Check the amber bars: over ~85% RAM means no room for growth or a second failure.</div>`
+      : '';
+
+  $('nodeTable').querySelector('tbody').innerHTML = nodes.map((n, i) => `<tr>
+    <td><input value="${esc(n.name)}" data-i="${i}" data-f="name"></td>
+    <td><input type="number" min="1" value="${n.cores}" data-i="${i}" data-f="cores"></td>
+    <td><input type="number" min="1" value="${n.ram}" data-i="${i}" data-f="ram"></td>
+    <td><button class="del" data-i="${i}" data-t="node">✕</button></td></tr>`).join('');
+
+  $('guestTable').querySelector('tbody').innerHTML = guests.map((g, i) => `<tr>
+    <td><input value="${esc(g.name)}" data-i="${i}" data-f="gname"></td>
+    <td><input type="number" min="1" value="${g.cores}" data-i="${i}" data-f="gcores"></td>
+    <td><input type="number" min="1" value="${g.ram}" data-i="${i}" data-f="gram"></td>
+    <td><select data-i="${i}" data-f="gnode">${nodes.map(n => `<option${n.name === g.node ? ' selected' : ''}>${esc(n.name)}</option>`).join('')}</select></td>
+    <td><select data-i="${i}" data-f="gpri">${[1,2,3].map(p => `<option value="${p}"${g.pri === p ? ' selected' : ''}>${PRI[p]}</option>`).join('')}</select></td>
+    <td><button class="del" data-i="${i}" data-t="guest">✕</button></td></tr>`).join('');
+
+  document.querySelectorAll('td input, td select').forEach(el => el.onchange = () => {
+    const i = +el.dataset.i, f = el.dataset.f, v = el.value;
+    if (f === 'name') {
+      const old = nodes[i].name;
+      // two nodes sharing a name collapse into one bucket in simulate() and the
+      // placement result becomes nonsense — refuse the rename instead
+      if (v !== old && nodes.some((n, j) => j !== i && n.name === v)) {
+        LabProfile.toast('There is already a node called that'); render(); return;
+      }
+      nodes[i].name = v;
+      guests.forEach(g => { if (g.node === old) g.node = v; });
+    }
+    else if (f === 'cores') nodes[i].cores = Math.max(1, +v);
+    else if (f === 'ram') nodes[i].ram = Math.max(1, +v);
+    else if (f === 'gname') guests[i].name = v;
+    else if (f === 'gcores') guests[i].cores = Math.max(1, +v);
+    else if (f === 'gram') guests[i].ram = Math.max(1, +v);
+    else if (f === 'gnode') guests[i].node = v;
+    else if (f === 'gpri') guests[i].pri = +v;
+    render();
+  });
+  document.querySelectorAll('.del').forEach(b => b.onclick = () => {
+    if (b.dataset.t === 'node') { if (nodes.length > 1) nodes.splice(+b.dataset.i, 1); }
+    else guests.splice(+b.dataset.i, 1);
+    guests.forEach(g => { if (!nodes.some(n => n.name === g.node)) g.node = nodes[0].name; });
+    render();
+  });
+}
+$('addNode').onclick = () => { nodes.push({ name:'node' + (nodes.length + 1), cores:4, ram:16, alive:true }); render(); };
+$('addGuest').onclick = () => { guests.push({ name:'new-guest', cores:1, ram:2, node:nodes[0].name, pri:2 }); render(); };
+
+LabProfile.bar({
+  el: 'pbar',
+  // `alive` is a simulation toggle, not a fact about the lab — it never persists
+  save: () => ({
+    nodes: nodes.map(n => ({ name:n.name, cores:n.cores, ram:n.ram })),
+    guests: guests.map(g => ({ name:g.name, cores:g.cores, ram:g.ram, node:g.node, pri:g.pri }))
+  }),
+  load: p => {
+    if (!p.nodes.length) throw new Error('no nodes saved yet — start in the sizing calculator');
+    nodes = p.nodes.map(n => ({ name:n.name, cores:+n.cores || 1, ram:+n.ram || 1, alive:true }));
+    guests = (p.guests || [])
+      .map(g => ({ name:g.name, cores:+g.cores || 1, ram:+g.ram || 1, node:g.node, pri:+g.pri || 2 }));
+    // any guest whose host is gone lands on the first surviving node
+    guests.forEach(g => { if (!nodes.some(n => n.name === g.node)) g.node = nodes[0].name; });
+    render();
+  }
+});
+
+render();
+</script>
+</body>
+</html>

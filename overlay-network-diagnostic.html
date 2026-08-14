@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Overlay Network Diagnostic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:#eeede6; --card:#faf9f4; --card2:#e5e3d7;
+    --ink:#1f211b; --dim:#5b5e53; --faint:#8a8c7f;
+    --hair:#cbc9bc; --hair2:#aeac9e;
+    --accent:#116d66; /* teal ink */
+    --ok:#316b3b; --bad:#a8352a;
+    --grid:rgba(43,92,173,.07); --slate:#23251d; --slatetext:#edebdd;
+    --fd:'Chakra Petch',system-ui,sans-serif; --fb:'IBM Plex Sans',system-ui,sans-serif;
+    --fm:'IBM Plex Mono',ui-monospace,SFMono-Regular,monospace;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body {
+    background:var(--paper); color:var(--ink); font-family:var(--fb); font-size:15px; line-height:1.6;
+    padding:40px 24px 56px; min-height:100vh;
+    background-image:linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:28px 28px;
+  }
+  ::selection { background:var(--accent); color:var(--paper); }
+  .wrap { max-width:760px; margin:0 auto; }
+  .dochead { display:flex; justify-content:space-between; align-items:flex-end; gap:18px; flex-wrap:wrap; border-bottom:2px solid var(--ink); padding-bottom:14px; position:relative; }
+  .dochead::after { content:""; position:absolute; left:0; right:0; bottom:-5px; height:1px; background:var(--ink); }
+  h1 { font-family:var(--fd); font-size:clamp(26px,4vw,36px); font-weight:700; letter-spacing:-.01em; line-height:1.1; }
+  h1 span { box-shadow:0 3px 0 0 var(--accent); }
+  .docmeta { font-family:var(--fm); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); white-space:nowrap; padding-bottom:5px; display:flex; align-items:center; gap:9px; }
+  .docmeta::before { content:""; width:9px; height:9px; background:var(--accent); flex:none; }
+  .sub { color:var(--dim); margin:20px 0 22px; font-size:15px; }
+  .crumbs { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; min-height:26px; }
+  .crumb { font-size:10.5px; font-family:var(--fm); letter-spacing:.06em; text-transform:uppercase; color:var(--dim); background:var(--card); border:1px solid var(--hair); border-radius:2px; padding:3px 10px; }
+  .crumb b { color:var(--accent); }
+  .card { background:var(--card); border:1px solid var(--hair); border-radius:4px; padding:24px 26px; animation:appear .25s ease both; }
+  @keyframes appear { from { opacity:0; transform:translateY(6px); } }
+  .card.fix { border-color:var(--ok); background:color-mix(in srgb, var(--ok) 3%, var(--card)); }
+  .layer { font-size:10.5px; font-family:var(--fm); text-transform:uppercase; letter-spacing:.18em; color:var(--accent); margin-bottom:12px; }
+  .card.fix .layer { color:var(--ok); }
+  .q { font-family:var(--fd); font-size:19px; font-weight:600; margin-bottom:10px; }
+  .help { color:var(--dim); font-size:14.5px; margin-bottom:14px; }
+  pre { background:var(--slate); border-radius:3px; padding:14px 16px; font-size:12.5px; overflow-x:auto; margin:12px 0; font-family:var(--fm); color:var(--slatetext); line-height:1.6; }
+  .btns { display:flex; gap:10px; margin-top:20px; flex-wrap:wrap; align-items:center; }
+  button { font-family:var(--fm); letter-spacing:.04em; border-radius:2px; border:1px solid var(--hair2); background:var(--card); color:var(--ink); padding:9px 24px; font-size:12.5px; cursor:pointer; transition:all .12s; }
+  button.yes:hover { border-color:var(--ok); color:var(--ok); background:color-mix(in srgb, var(--ok) 7%, var(--card)); }
+  button.no:hover { border-color:var(--bad); color:var(--bad); background:color-mix(in srgb, var(--bad) 6%, var(--card)); }
+  button.ghost { border:none; background:none; color:var(--faint); font-size:11.5px; }
+  button.ghost:hover { color:var(--accent); }
+  .fixtitle { color:var(--ok); font-family:var(--fd); font-size:19px; font-weight:600; margin-bottom:8px; }
+  .foot { margin-top:44px; border-top:2px solid var(--ink); padding-top:12px; font-size:12.5px; line-height:1.7; color:var(--dim); font-family:var(--fm); }
+  .foot a { color:var(--accent); text-decoration:none; border-bottom:1px solid var(--accent); }
+  .foot a:hover { background:color-mix(in srgb, var(--accent) 12%, transparent); }
+  .foot code { color:var(--ink); background:var(--card2); padding:0 4px; border-radius:2px; }
+  .foot b { color:var(--ink); font-weight:600; letter-spacing:.06em; }
+<!-- PROFILE:CSS -->
+  /* ---- Lab Profile bar (shared across Peira field tools) ---- */
+  .pbar { display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin:0 0 22px;
+    padding:8px 12px; background:var(--card2,#e5e3d7); border:1px solid var(--hair,#cbc9bc);
+    border-radius:3px; font-family:var(--fm,monospace); font-size:11px; color:var(--dim,#5b5e53); }
+  .pbar .pdot { width:7px; height:7px; flex:none; background:var(--faint,#8a8c7f); border-radius:50%; }
+  .pbar.on .pdot { background:var(--accent,#116d66); }
+  .pbar .ptxt { flex:1 1 190px; letter-spacing:.05em; text-transform:uppercase; line-height:1.5; }
+  .pbar .pacts { display:flex; gap:6px; flex-wrap:wrap; }
+  .pbtn { font-family:var(--fm,monospace); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;
+    border:1px solid var(--hair2,#aeac9e); background:var(--card,#faf9f4); color:var(--dim,#5b5e53);
+    border-radius:2px; padding:4px 9px; cursor:pointer; transition:color .12s,border-color .12s; }
+  .pbtn:hover { color:var(--accent,#116d66); border-color:var(--accent,#116d66); }
+  .pbtn[disabled] { opacity:.4; cursor:not-allowed; }
+  .pbtn[disabled]:hover { color:var(--dim,#5b5e53); border-color:var(--hair2,#aeac9e); }
+  .ptoast { position:fixed; left:50%; bottom:26px; transform:translateX(-50%);
+    background:var(--slate,#23251d); color:var(--slatetext,#edebdd); font-family:var(--fm,monospace);
+    font-size:12px; padding:9px 18px; border-radius:3px; z-index:60; animation:ptin .2s ease both; }
+  @keyframes ptin { from { opacity:0; transform:translate(-50%,8px); } }
+  .pmodal { position:fixed; inset:0; background:rgba(31,33,27,.55); z-index:70;
+    display:flex; align-items:center; justify-content:center; padding:24px; animation:ptin .18s ease both; }
+  .pmbox { background:var(--card,#faf9f4); border:1px solid var(--hair2,#aeac9e); border-radius:4px;
+    width:100%; max-width:680px; max-height:86vh; display:flex; flex-direction:column; padding:22px 24px; }
+  .pmbox h3 { font-family:var(--fd,sans-serif); font-size:19px; font-weight:600; margin-bottom:6px; color:var(--ink,#1f211b); }
+  .pmbox p { font-size:13.5px; color:var(--dim,#5b5e53); margin-bottom:12px; line-height:1.6; }
+  .pmbox textarea { width:100%; flex:1; min-height:220px; background:var(--slate,#23251d);
+    color:var(--slatetext,#edebdd); border:1px solid var(--hair2,#aeac9e); border-radius:3px;
+    padding:12px 14px; font-family:var(--fm,monospace); font-size:12px; line-height:1.6; resize:vertical; }
+  .pmbox textarea:focus { outline:none; border-color:var(--accent,#116d66); }
+  .pmacts { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+  /* keyboard users get a visible ring on the div/span controls the tools use */
+  .svc:focus-visible, .chip:focus-visible, [role="button"]:focus-visible, [role="checkbox"]:focus-visible {
+    outline:2px solid var(--accent,#116d66); outline-offset:2px; }
+<!-- /PROFILE:CSS -->
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="dochead">
+    <h1>Overlay Network <span>Diagnostic</span></h1>
+    <div class="docmeta">peira.dev · FT-04 · packet forensics</div>
+  </div>
+  <p class="sub">"My VM/container can't reach a device across my Tailscale/WireGuard subnet router — but other machines can." There are three layers where this silently dies. Walk them in order.</p>
+  <div id="pbar"></div>
+  <div class="crumbs" id="crumbs"></div>
+  <div id="card"></div>
+  <p class="foot">All addresses below are examples from the <code>10.0.x.x</code> documentation space — substitute your own. Built from a real three-layer outage diagnosis. A <b>Peira Labs</b> field tool · <a href="https://peira.dev" target="_blank" rel="noopener">peira.dev</a>.</p>
+</div>
+
+<script>
+<!-- PROFILE:JS -->
+/* ---- Lab Profile: shared state across Peira Labs field tools ----
+   One profile per browser origin. On peira.dev every tool reads and writes
+   the same record, so a lab described once flows into all of them. Inside the
+   claude.ai artifact sandbox localStorage is unavailable, so it degrades to
+   in-memory for the session and the JSON export becomes the way to carry it. */
+const LabProfile = (function () {
+  const KEY = 'peira.lab.v1';
+  const BLANK = { v:1, updated:null, services:[], scale:null, sizing:null,
+                  nodes:[], guests:[], datasets:[], power:null, deps:null, handover:null };
+  let mem = null, durable = false;
+  try { localStorage.setItem('__pt', '1'); localStorage.removeItem('__pt'); durable = true; } catch (e) { durable = false; }
+
+  const subs = [];
+  const clone = o => JSON.parse(JSON.stringify(o));
+
+  function get() {
+    if (mem) return mem;
+    if (durable) {
+      try {
+        const raw = localStorage.getItem(KEY);
+        if (raw) { const o = JSON.parse(raw); if (o && o.v === 1) mem = Object.assign(clone(BLANK), o); }
+      } catch (e) { /* corrupt or blocked — fall through to blank */ }
+    }
+    if (!mem) mem = clone(BLANK);
+    return mem;
+  }
+
+  function persist() {
+    if (!durable) return;
+    try { localStorage.setItem(KEY, JSON.stringify(mem)); } catch (e) { /* quota or blocked */ }
+  }
+
+  function set(patch) {
+    const p = get();
+    Object.assign(p, patch);
+    p.v = 1;
+    p.updated = new Date().toISOString().slice(0, 10);
+    persist();
+    subs.forEach(f => { try { f(p); } catch (e) {} });
+    return p;
+  }
+
+  function clear() {
+    mem = clone(BLANK);
+    if (durable) { try { localStorage.removeItem(KEY); } catch (e) {} }
+    subs.forEach(f => { try { f(mem); } catch (e) {} });
+    return mem;
+  }
+
+  function isEmpty(p) {
+    p = p || get();
+    return !p.services.length && !p.nodes.length && !p.guests.length &&
+           !p.datasets.length && !p.power && !p.deps && !p.handover && !p.sizing;
+  }
+
+  const esc = s => String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+  /* ---- summary + AI context ---- */
+  function summary(p) {
+    p = p || get();
+    const bits = [];
+    if (p.nodes.length)    bits.push(p.nodes.length + ' node' + (p.nodes.length > 1 ? 's' : ''));
+    if (p.guests.length)   bits.push(p.guests.length + ' guest' + (p.guests.length > 1 ? 's' : ''));
+    if (p.services.length) bits.push(p.services.length + ' service' + (p.services.length > 1 ? 's' : ''));
+    if (p.datasets.length) bits.push(p.datasets.length + ' data set' + (p.datasets.length > 1 ? 's' : ''));
+    if (p.power)           bits.push('power plan');
+    if (p.deps)            bits.push('dependency map');
+    if (p.handover)        bits.push('handover');
+    return bits.join(' · ');
+  }
+
+  // Compact plain-text description for AI tools to prepend as lab context.
+  function ctx() {
+    const p = get();
+    if (isEmpty(p)) return '';
+    const L = [];
+    if (p.nodes.length)
+      L.push('Nodes: ' + p.nodes.map(n => `${n.name} (${n.cores}c/${n.ram}GB)`).join(', '));
+    if (p.guests.length)
+      L.push('Guests: ' + p.guests.map(g => `${g.name} on ${g.node} (${g.cores}c/${g.ram}GB)`).join(', '));
+    if (p.services.length) L.push('Services: ' + p.services.join(', '));
+    if (p.datasets.length)
+      L.push('Data sets: ' + p.datasets.map(d => `${d.name} ~${d.size}GB`).join(', '));
+    if (p.power && p.power.ups) L.push(`UPS: ${p.power.ups}W load, ${p.power.runtime} min runtime`);
+    return "The user's lab, from their saved profile (use it to make the answer specific; " +
+           "do not assume anything not listed):\n" + L.join('\n');
+  }
+
+  /* ---- Markdown lab document ---- */
+  const PRI_NAME = { 1:'critical', 2:'normal', 3:'best-effort' };
+  function doc() {
+    const p = get();
+    const out = ['# Homelab field record', ''];
+    out.push('Generated ' + (p.updated || new Date().toISOString().slice(0, 10)) +
+             ' with the Peira Labs field tools (https://peira.dev/tools/).', '');
+    if (isEmpty(p)) {
+      out.push('_No lab details recorded yet. Fill in any field tool and press **Save to profile**._');
+      return out.join('\n');
+    }
+    if (p.sizing) {
+      out.push('## Sizing target', '',
+        `- Cores: ${p.sizing.cores}`,
+        `- RAM: ${p.sizing.ram} GB`,
+        `- Live data: ${p.sizing.data} TB`,
+        `- Backup space: ${p.sizing.backup} TB`);
+      if (p.sizing.rec) out.push(`- Recommendation: ${p.sizing.rec}`);
+      out.push('');
+    }
+    if (p.services.length) out.push('## Services', '', p.services.map(s => '- ' + s).join('\n'), '');
+    if (p.nodes.length) {
+      out.push('## Nodes', '', '| Node | Cores | RAM (GB) |', '|---|---|---|');
+      p.nodes.forEach(n => out.push(`| ${n.name} | ${n.cores} | ${n.ram} |`));
+      out.push('');
+    }
+    if (p.guests.length) {
+      out.push('## Guests', '', '| Guest | Host node | Cores | RAM (GB) | Priority |', '|---|---|---|---|---|');
+      p.guests.forEach(g => out.push(`| ${g.name} | ${g.node} | ${g.cores} | ${g.ram} | ${PRI_NAME[g.pri] || g.pri} |`));
+      out.push('');
+    }
+    if (p.datasets.length) {
+      out.push('## Data and backups', '', '| Data set | Size (GB) | Snapshots | 2nd device | Offsite | Cold |', '|---|---|---|---|---|---|');
+      p.datasets.forEach(d => out.push(
+        `| ${d.name} | ${d.size} | ${d.snap ? 'yes' : 'no'} | ${d.dev2 ? 'yes' : 'no'} | ${d.off ? 'yes' : 'no'} | ${d.cold ? 'yes' : 'no'} |`));
+      out.push('');
+    }
+    if (p.power) {
+      out.push('## Power loss', '');
+      if (p.power.ups) out.push(`- UPS load: ${p.power.ups} W`, `- Estimated runtime: ${p.power.runtime} min`);
+      if (p.power.shutdown && p.power.shutdown.length) {
+        out.push('', '**Shutdown order** (first to last):', '');
+        p.power.shutdown.forEach((m, i) => out.push(`${i + 1}. ${m}`));
+      }
+      if (p.power.boot && p.power.boot.length) {
+        out.push('', '**Boot order** (first to last):', '');
+        p.power.boot.forEach((m, i) => out.push(`${i + 1}. ${m}`));
+      }
+      out.push('');
+    }
+    if (p.deps && p.deps.items && p.deps.items.length) {
+      out.push('## Dependencies', '', '| Service | Depends on |', '|---|---|');
+      p.deps.items.forEach(it => out.push(`| ${it.name} | ${(it.needs || []).join(', ') || '—'} |`));
+      if (p.deps.spof && p.deps.spof.length)
+        out.push('', '**Single points of failure:** ' + p.deps.spof.join(', '));
+      out.push('');
+    }
+    if (p.handover) {
+      out.push('## If someone else has to run this', '');
+      Object.keys(p.handover).forEach(k => {
+        // entries are { q, a }; a bare string is an older profile, keyed by question text
+        const v = p.handover[k];
+        const q = (v && typeof v === 'object') ? v.q : k;
+        const a = (v && typeof v === 'object') ? v.a : v;
+        if (a) out.push(`### ${q}`, '', a, '');
+      });
+    }
+    out.push('---', '', 'Built with free field tools at https://peira.dev/tools/');
+    return out.join('\n');
+  }
+
+  /* ---- text modal (works where downloads are blocked) ----
+     Returns the backdrop element so callers can extend it safely rather than
+     re-querying the document (which would find an older modal if one is open). */
+  function showText(title, desc, text, filename) {
+    const back = document.createElement('div');
+    back.className = 'pmodal';
+    back.innerHTML =
+      `<div class="pmbox"><h3>${esc(title)}</h3><p>${esc(desc)}</p>` +
+      `<textarea readonly spellcheck="false"></textarea>` +
+      `<div class="pmacts"><button class="pbtn" data-a="copy">Copy</button>` +
+      `<button class="pbtn" data-a="dl">Download</button>` +
+      `<button class="pbtn" data-a="close">Close</button></div></div>`;
+    const ta = back.querySelector('textarea');
+    ta.value = text;
+    const close = () => back.remove();
+    back.addEventListener('click', e => { if (e.target === back) close(); });
+    back.querySelector('[data-a="close"]').onclick = close;
+    back.querySelector('[data-a="copy"]').onclick = async () => {
+      let ok = false;
+      try { await navigator.clipboard.writeText(text); ok = true; } catch (e) {}
+      if (!ok) { try { ta.select(); ok = document.execCommand('copy'); } catch (e) {} }
+      toast(ok ? 'Copied to clipboard' : 'Select the text and copy manually');
+    };
+    back.querySelector('[data-a="dl"]').onclick = () => {
+      try {
+        const url = URL.createObjectURL(new Blob([text], { type:'text/plain;charset=utf-8' }));
+        const a = document.createElement('a');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click();
+        setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
+      } catch (e) { toast('Download blocked here — use Copy'); }
+    };
+    document.body.appendChild(back);
+    ta.focus();
+    return back;
+  }
+
+  let toastEl = null;
+  function toast(msg) {
+    if (toastEl) toastEl.remove();
+    toastEl = document.createElement('div');
+    toastEl.className = 'ptoast';
+    toastEl.textContent = msg;
+    document.body.appendChild(toastEl);
+    const mine = toastEl;
+    setTimeout(() => { if (mine === toastEl) { mine.remove(); toastEl = null; } }, 2600);
+  }
+
+  function importText(raw) {
+    const o = JSON.parse(raw);
+    if (!o || o.v !== 1) throw new Error('That is not a Peira lab profile (expected v1).');
+    mem = Object.assign(clone(BLANK), o);
+    persist();
+    subs.forEach(f => { try { f(mem); } catch (e) {} });
+    return mem;
+  }
+
+  /* ---- the bar ----
+     opts: { el, save?: () => patch, load?: (profile) => void, syncs?: string } */
+  function bar(opts) {
+    opts = opts || {};
+    const host = document.getElementById(opts.el || 'pbar');
+    if (!host) return;
+
+    function render() {
+      const p = get();
+      const empty = isEmpty(p);
+      const s = summary(p);
+      host.className = 'pbar' + (empty ? '' : ' on');
+      const note = empty
+        ? (durable ? 'No lab profile yet — tools on this site share one'
+                   : 'Session-only profile (this sandbox blocks storage)')
+        : 'Lab profile: ' + s + (durable ? '' : ' · session only');
+      host.innerHTML =
+        `<span class="pdot"></span><span class="ptxt">${esc(note)}</span>` +
+        `<span class="pacts">` +
+        (opts.save ? `<button class="pbtn" data-a="save" title="Write this tool's data into your shared lab profile">Save to profile</button>` : '') +
+        (opts.load ? `<button class="pbtn" data-a="load"${empty ? ' disabled' : ''} title="Fill this tool in from your saved profile">Load</button>` : '') +
+        `<button class="pbtn" data-a="doc"${empty ? ' disabled' : ''} title="Export your whole lab as a Markdown document">Lab doc</button>` +
+        `<button class="pbtn" data-a="json" title="Export or import the profile as JSON">JSON</button>` +
+        (empty ? '' : `<button class="pbtn" data-a="clear" title="Delete the saved profile">Clear</button>`) +
+        `</span>`;
+
+      host.querySelectorAll('.pbtn').forEach(b => b.onclick = () => act(b.dataset.a));
+    }
+
+    function act(a) {
+      if (a === 'save') {
+        try {
+          const patch = opts.save();
+          if (patch) { set(patch); toast('Saved to lab profile' + (durable ? '' : ' (session only)')); }
+        } catch (e) { toast('Could not save: ' + e.message); }
+      } else if (a === 'load') {
+        // Load replaces what is on screen — that is more destructive than Clear,
+        // which only drops the stored copy, so it gets the confirmation too.
+        if (!confirm('Load from your lab profile? Anything you have typed into this tool will be replaced.')) return;
+        try { opts.load(get()); toast('Loaded from lab profile'); }
+        catch (e) { toast('Could not load: ' + e.message); }
+      } else if (a === 'doc') {
+        showText('Your lab, documented',
+          'A Markdown record of everything your field tools know about this lab. Paste it into your notes, wiki, or repo.',
+          doc(), 'homelab-field-record.md');
+      } else if (a === 'json') {
+        showJson();
+      } else if (a === 'clear') {
+        if (confirm('Delete the saved lab profile? This cannot be undone.')) { clear(); toast('Profile cleared'); }
+      }
+    }
+
+    function showJson() {
+      const back = showText('Lab profile (JSON)',
+        'Copy this to move your profile to another browser, or into the claude.ai copies of these tools. To restore one, paste it in and press Import.',
+        JSON.stringify(get(), null, 2), 'peira-lab-profile.json');
+      const box = back.querySelector('.pmacts');
+      const ta = back.querySelector('textarea');
+      ta.removeAttribute('readonly');
+      const b = document.createElement('button');
+      b.className = 'pbtn'; b.textContent = 'Import';
+      b.onclick = () => {
+        try { importText(ta.value); toast('Profile imported'); back.remove(); }
+        catch (e) { toast('Invalid profile: ' + e.message); }
+      };
+      box.insertBefore(b, box.firstChild);
+    }
+
+    subs.push(render);
+    render();
+  }
+
+  return { get, set, clear, isEmpty, esc, summary, ctx, doc, bar, toast, showText,
+           import: importText, durable, on: f => subs.push(f) };
+})();
+<!-- /PROFILE:JS -->
+
+const TREE = {
+  start: { layer:'Setup', q:'Can the host node itself reach the target?',
+    help:'First split the problem. From the hypervisor/host that runs the guest (the machine with its own overlay agent), try the target:',
+    code:'ping -c2 10.0.0.50        # target LAN IP behind the subnet router\nnc -zv -w3 10.0.0.50 443    # and the actual port you need',
+    yes:'l1', no:'router' },
+
+  router: { layer:'Subnet router', q:'Is the subnet route actually being served?',
+    help:'If even the host can\'t get through, the guest was never the problem. Check the machine advertising the route:',
+    code:'# on the subnet router\ntailscale status\ntailscale up --advertise-routes=10.0.0.0/24\n# then in the admin console: the advertised route must be APPROVED —\n# advertising without approval looks identical from the client side.',
+    yes:'l1', no:'fix_router' },
+  fix_router: { fix:true, layer:'Subnet router', t:'Fix the router first',
+    help:'Approve the advertised route in your overlay admin console, confirm the router machine is online, and re-test from the host. Nothing downstream can work until this does. Then come back and start over.' },
+
+  l1: { layer:'Layer 1 — Routing', q:'Does the guest have a route to the overlay subnet?',
+    help:'The host having a route does not mean the guest has one — guests get their own network namespace. From inside the guest:',
+    code:'ip route get 10.0.0.50       # the target behind the subnet router\n# Healthy: "via <host or subnet-router IP>". Broken: via your default\n# gateway, which knows nothing about the overlay.',
+    yes:'l2', no:'fix_l1' },
+  fix_l1: { fix:true, layer:'Layer 1 — Routing', t:'Add a persistent route inside the guest',
+    help:'Add a static route via the node that runs the overlay agent. One warning from hard experience: hypervisors like Proxmox regenerate a container\'s /etc/network/interfaces — a route dropped into interfaces.d can silently vanish on the next config rebuild. Persist it as a systemd unit instead:',
+    code:'# /etc/systemd/system/overlay-route.service\n[Unit]\nDescription=Route to overlay subnet\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\nType=oneshot\nExecStart=/sbin/ip route replace 10.0.0.0/24 via 10.0.1.1\nRemainAfterExit=yes\n\n[Install]\nWantedBy=multi-user.target\n# systemctl enable --now overlay-route',
+    next:'l2', nextLabel:'Route added — keep checking' },
+
+  l2: { layer:'Layer 2 — Overlay ACL', q:'Does the ACL allow traffic from a subnet-routed source?',
+    help:'This is the layer everyone misses. Your guest\'s traffic arrives at the destination tagged with its LAN source IP — it is NOT a tailnet member. An ACL grant for "autogroup:member" does not cover it, and the receiving agent drops the packets silently: no log, no rejection, the connection just times out. Check whether your ACL has an explicit rule for the source subnet or IP.',
+    code:'// somewhere in your tailnet policy you need the SUBNET as src:\n"acls": [\n  { "action": "accept",\n    "src": ["10.0.1.0/24"],          // the guests\' subnet\n    "dst": ["10.0.0.50:443"] }       // the target, scoped to the port\n]',
+    yes:'l3', no:'fix_l2' },
+  fix_l2: { fix:true, layer:'Layer 2 — Overlay ACL', t:'Add a scoped grant for the subnet source',
+    help:'Add an explicit accept rule with the guest subnet (or a single /32) as src — scope dst to the specific host and port rather than opening the world. Edit via the admin console or API; if you use the API, validate the policy before setting it. Re-test from the guest afterwards.',
+    code:'{ "action": "accept", "src": ["10.0.1.5/32"], "dst": ["10.0.0.50:9100"] }',
+    next:'l3', nextLabel:'Grant added — keep checking' },
+
+  l3: { layer:'Layer 3 — Host firewall', q:'Does the destination run its own firewall or IP allowlist?',
+    help:'NAS security suites, ufw, firewalld, "network defender" features — anything on the destination that filters by source IP will see your guest\'s unfamiliar address and drop it. This layer also fails silently. Check the destination\'s firewall config and logs for the guest\'s source IP.',
+    yes:'fix_l3', no:'deep' },
+  fix_l3: { fix:true, layer:'Layer 3 — Host firewall', t:'Whitelist the source on the destination',
+    help:'Add the guest\'s IP (or its subnet) to the destination\'s allowlist / trusted-hosts list. Back up the firewall config before editing it — security suites love to "helpfully" reset. Then re-test end to end: it\'s only fixed when the actual service responds, not when ping works.',
+    code:'nc -zv -w3 10.0.0.50 443   # from the guest — this is the pass/fail test' },
+
+  deep: { fix:true, layer:'Beyond the three layers', t:'The unusual suspects',
+    help:'All three layers check out and it still fails? Work through these, in order of likelihood:',
+    code:'# 1. MTU — overlays need smaller packets; big transfers stall, pings work\nping -c2 -M do -s 1252 10.0.0.50\n# 2. The service binds only to localhost or one interface\nss -tlnp | grep <port>      # on the destination\n# 3. Asymmetric return path — capture on the destination, watch for\n#    SYN arriving with no SYN-ACK leaving\ntcpdump -ni any host <guest-ip>\n# 4. DNS — you are testing a name, not an IP. Test the IP.' },
+};
+
+let path = [];
+const $ = id => document.getElementById(id);
+
+function show(id) {
+  const n = TREE[id];
+  $('crumbs').innerHTML = path.map(p =>
+    `<span class="crumb">${TREE[p.id].layer}: <b>${p.a}</b></span>`).join('');
+  if (n.fix) {
+    $('card').innerHTML = `<div class="card fix"><div class="layer">${n.layer}</div>
+      <div class="fixtitle">✓ ${n.t}</div><div class="help">${n.help}</div>
+      ${n.code ? `<pre>${esc(n.code)}</pre>` : ''}
+      <div class="btns">
+        ${n.next ? `<button class="yes" onclick="go('${n.next}','fixed')">${n.nextLabel}</button>` : ''}
+        <button class="ghost" onclick="restart()">↺ start over</button>
+      </div></div>`;
+  } else {
+    $('card').innerHTML = `<div class="card"><div class="layer">${n.layer}</div>
+      <div class="q">${n.q}</div><div class="help">${n.help}</div>
+      ${n.code ? `<pre>${esc(n.code)}</pre>` : ''}
+      <div class="btns">
+        <button class="yes" onclick="go('${n.yes}','yes')">Yes</button>
+        <button class="no" onclick="go('${n.no}','no')">No / not sure</button>
+        ${path.length ? `<button class="ghost" onclick="restart()">↺ start over</button>` : ''}
+      </div></div>`;
+  }
+  window._cur = id;
+}
+function go(next, answer) { path.push({ id:window._cur, a:answer }); show(next); }
+function restart() { path = []; show('start'); }
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+LabProfile.bar({ el:'pbar' });
+
+show('start');
+</script>
+</body>
+</html>

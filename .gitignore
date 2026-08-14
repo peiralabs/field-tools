@@ -1,0 +1,11 @@
+# Nothing here needs a build step — the tools are hand-authored single files.
+# This list exists so an accidental local experiment does not get committed.
+node_modules/
+dist/
+*.log
+
+# Editor / OS noise
+.DS_Store
+*.swp
+.idea/
+.vscode/

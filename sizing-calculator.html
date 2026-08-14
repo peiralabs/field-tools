@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Homelab Sizing Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:#eeede6; --card:#faf9f4; --card2:#e5e3d7;
+    --ink:#1f211b; --dim:#5b5e53; --faint:#8a8c7f;
+    --hair:#cbc9bc; --hair2:#aeac9e;
+    --accent:#c7500f; /* safety orange ink */
+    --ok:#316b3b; --bad:#a8352a; --warn:#9a6c00;
+    --grid:rgba(43,92,173,.07); --slate:#23251d; --slatetext:#edebdd;
+    --fd:'Chakra Petch',system-ui,sans-serif; --fb:'IBM Plex Sans',system-ui,sans-serif;
+    --fm:'IBM Plex Mono',ui-monospace,SFMono-Regular,monospace;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body {
+    background:var(--paper); color:var(--ink); font-family:var(--fb); font-size:15px; line-height:1.55;
+    padding:40px 24px 56px; min-height:100vh;
+    background-image:linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:28px 28px;
+  }
+  ::selection { background:var(--accent); color:var(--paper); }
+  .wrap { max-width:980px; margin:0 auto; }
+  .dochead { display:flex; justify-content:space-between; align-items:flex-end; gap:18px; flex-wrap:wrap; border-bottom:2px solid var(--ink); padding-bottom:14px; position:relative; }
+  .dochead::after { content:""; position:absolute; left:0; right:0; bottom:-5px; height:1px; background:var(--ink); }
+  h1 { font-family:var(--fd); font-size:clamp(26px,4vw,36px); font-weight:700; letter-spacing:-.01em; line-height:1.1; }
+  h1 span { box-shadow:0 3px 0 0 var(--accent); }
+  .docmeta { font-family:var(--fm); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); white-space:nowrap; padding-bottom:5px; display:flex; align-items:center; gap:9px; }
+  .docmeta::before { content:""; width:9px; height:9px; background:var(--accent); flex:none; }
+  .sub { color:var(--dim); margin:20px 0 8px; font-size:15px; max-width:62ch; }
+  h2 { font-family:var(--fm); font-size:11px; font-weight:500; text-transform:uppercase; letter-spacing:.18em; color:var(--dim); margin:30px 0 12px; display:flex; align-items:center; gap:12px; }
+  h2::after { content:""; flex:1; height:1px; background:var(--hair2); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(225px,1fr)); gap:10px; }
+  .svc { background:var(--card); border:1px solid var(--hair); border-radius:3px; padding:13px 15px; cursor:pointer; user-select:none; transition:border-color .12s, background-color .12s; }
+  .svc:hover { border-color:var(--hair2); }
+  .svc.on { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 5%, var(--card)); }
+  .svc .nm { font-family:var(--fd); font-weight:600; font-size:14.5px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .svc .nm .tick { width:17px; height:17px; border:1.5px solid var(--hair2); border-radius:2px; flex:none; display:flex; align-items:center; justify-content:center; background:var(--card); }
+  .svc.on .nm .tick { background:var(--accent); border-color:var(--accent); }
+  .svc.on .nm .tick::after { content:"✓"; font-size:11px; font-weight:700; color:var(--paper); }
+  .svc .ds { color:var(--dim); font-size:12.5px; margin-top:4px; }
+  .svc .rq { color:var(--faint); font-size:11px; margin-top:8px; font-family:var(--fm); letter-spacing:.04em; }
+  .row { display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; }
+  .ctl { background:var(--card); border:1px solid var(--hair); border-radius:3px; padding:14px 18px; flex:1; min-width:250px; }
+  .ctl label { font-size:13px; color:var(--dim); display:block; margin-bottom:10px; }
+  .ctl output { color:var(--accent); font-weight:600; font-family:var(--fm); }
+  input[type=range] { -webkit-appearance:none; appearance:none; width:100%; height:4px; border-radius:0; background:var(--card2); border:1px solid var(--hair); outline:none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:2px; background:var(--accent); border:none; cursor:pointer; }
+  select { background:var(--card); color:var(--ink); border:1px solid var(--hair2); border-radius:3px; padding:8px 10px; font-size:13px; width:100%; font-family:var(--fb); }
+  select:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
+  .toggle { display:flex; align-items:center; gap:10px; cursor:pointer; font-size:14px; padding:5px 0; }
+  .toggle input { accent-color:var(--accent); width:16px; height:16px; }
+  .result { background:var(--card); border:1px solid var(--hair); border-top:3px solid var(--ink); border-radius:0 0 3px 3px; padding:24px 26px; margin-top:28px; }
+  .totals { display:flex; gap:34px; flex-wrap:wrap; margin-bottom:18px; }
+  .tot .v { font-size:30px; font-weight:600; color:var(--ink); font-family:var(--fm); font-variant-numeric:tabular-nums; }
+  .tot .k { font-size:10.5px; color:var(--faint); text-transform:uppercase; letter-spacing:.18em; font-family:var(--fm); margin-top:2px; }
+  .rec { border-top:1px solid var(--hair); padding-top:16px; font-size:15.5px; }
+  .rec b { color:var(--accent); font-family:var(--fd); }
+  .why { color:var(--dim); font-size:13.5px; margin-top:8px; }
+  .note { color:var(--faint); font-size:12px; margin-top:20px; }
+  .foot { margin-top:44px; border-top:2px solid var(--ink); padding-top:12px; font-size:12.5px; line-height:1.7; color:var(--dim); font-family:var(--fm); }
+  .foot a { color:var(--accent); text-decoration:none; border-bottom:1px solid var(--accent); }
+  .foot a:hover { background:color-mix(in srgb, var(--accent) 12%, transparent); }
+  .foot b { color:var(--ink); font-weight:600; letter-spacing:.06em; }
+<!-- PROFILE:CSS -->
+  /* ---- Lab Profile bar (shared across Peira field tools) ---- */
+  .pbar { display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin:0 0 22px;
+    padding:8px 12px; background:var(--card2,#e5e3d7); border:1px solid var(--hair,#cbc9bc);
+    border-radius:3px; font-family:var(--fm,monospace); font-size:11px; color:var(--dim,#5b5e53); }
+  .pbar .pdot { width:7px; height:7px; flex:none; background:var(--faint,#8a8c7f); border-radius:50%; }
+  .pbar.on .pdot { background:var(--accent,#116d66); }
+  .pbar .ptxt { flex:1 1 190px; letter-spacing:.05em; text-transform:uppercase; line-height:1.5; }
+  .pbar .pacts { display:flex; gap:6px; flex-wrap:wrap; }
+  .pbtn { font-family:var(--fm,monospace); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;
+    border:1px solid var(--hair2,#aeac9e); background:var(--card,#faf9f4); color:var(--dim,#5b5e53);
+    border-radius:2px; padding:4px 9px; cursor:pointer; transition:color .12s,border-color .12s; }
+  .pbtn:hover { color:var(--accent,#116d66); border-color:var(--accent,#116d66); }
+  .pbtn[disabled] { opacity:.4; cursor:not-allowed; }
+  .pbtn[disabled]:hover { color:var(--dim,#5b5e53); border-color:var(--hair2,#aeac9e); }
+  .ptoast { position:fixed; left:50%; bottom:26px; transform:translateX(-50%);
+    background:var(--slate,#23251d); color:var(--slatetext,#edebdd); font-family:var(--fm,monospace);
+    font-size:12px; padding:9px 18px; border-radius:3px; z-index:60; animation:ptin .2s ease both; }
+  @keyframes ptin { from { opacity:0; transform:translate(-50%,8px); } }
+  .pmodal { position:fixed; inset:0; background:rgba(31,33,27,.55); z-index:70;
+    display:flex; align-items:center; justify-content:center; padding:24px; animation:ptin .18s ease both; }
+  .pmbox { background:var(--card,#faf9f4); border:1px solid var(--hair2,#aeac9e); border-radius:4px;
+    width:100%; max-width:680px; max-height:86vh; display:flex; flex-direction:column; padding:22px 24px; }
+  .pmbox h3 { font-family:var(--fd,sans-serif); font-size:19px; font-weight:600; margin-bottom:6px; color:var(--ink,#1f211b); }
+  .pmbox p { font-size:13.5px; color:var(--dim,#5b5e53); margin-bottom:12px; line-height:1.6; }
+  .pmbox textarea { width:100%; flex:1; min-height:220px; background:var(--slate,#23251d);
+    color:var(--slatetext,#edebdd); border:1px solid var(--hair2,#aeac9e); border-radius:3px;
+    padding:12px 14px; font-family:var(--fm,monospace); font-size:12px; line-height:1.6; resize:vertical; }
+  .pmbox textarea:focus { outline:none; border-color:var(--accent,#116d66); }
+  .pmacts { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+  /* keyboard users get a visible ring on the div/span controls the tools use */
+  .svc:focus-visible, .chip:focus-visible, [role="button"]:focus-visible, [role="checkbox"]:focus-visible {
+    outline:2px solid var(--accent,#116d66); outline-offset:2px; }
+<!-- /PROFILE:CSS -->
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="dochead">
+    <h1>Homelab <span>Sizing Calculator</span></h1>
+    <div class="docmeta">peira.dev · FT-01 · capacity</div>
+  </div>
+  <p class="sub">Pick the services you want to run. Get an honest hardware recommendation — no vendor math.</p>
+
+  <div id="pbar"></div>
+
+  <h2>Services</h2>
+  <div class="grid" id="services"></div>
+
+  <h2>Data</h2>
+  <div class="row">
+    <div class="ctl"><label>Media library (movies / TV): <output id="mediaOut">2 TB</output></label>
+      <input type="range" id="mediaTB" min="0" max="40" step="1" value="2"></div>
+    <div class="ctl"><label>Photo library: <output id="photoOut">0.5 TB</output></label>
+      <input type="range" id="photoTB" min="0" max="10" step="0.5" value="0.5"></div>
+    <div class="ctl"><label>Local LLM size (Ollama)</label>
+      <select id="llm">
+        <option value="0">None</option>
+        <option value="7">7–8B models (chat, light coding)</option>
+        <option value="13">13–14B models</option>
+        <option value="30">30B+ models (serious local AI)</option>
+      </select></div>
+  </div>
+
+  <h2>Resilience</h2>
+  <div class="row">
+    <div class="ctl">
+      <label class="toggle"><input type="checkbox" id="n1"> Survive one node failure (N+1 cluster)</label>
+      <label class="toggle"><input type="checkbox" id="bkMedia"> Include media in backup sizing</label>
+    </div>
+  </div>
+
+  <div class="result">
+    <div class="totals">
+      <div class="tot"><div class="v" id="tCores">0</div><div class="k">CPU cores</div></div>
+      <div class="tot"><div class="v" id="tRam">0 GB</div><div class="k">RAM</div></div>
+      <div class="tot"><div class="v" id="tDisk">0 TB</div><div class="k">Storage</div></div>
+      <div class="tot"><div class="v" id="tBackup">0 TB</div><div class="k">Backup target</div></div>
+    </div>
+    <div class="rec" id="rec"></div>
+    <div class="why" id="why"></div>
+    <p class="note">Totals include 30% headroom. Storage recommendation excludes RAID/redundancy overhead — add your mirror or parity on top. Used business mini-PCs and SFF desktops (8th-gen Intel or newer) are the best value for most of these builds.</p>
+  </div>
+
+  <p class="foot">A <b>Peira Labs</b> field tool. Guides for building exactly this at <a href="https://peira.dev" target="_blank" rel="noopener">peira.dev</a>. Remix freely.</p>
+</div>
+
+<script>
+<!-- PROFILE:JS -->
+/* ---- Lab Profile: shared state across Peira Labs field tools ----
+   One profile per browser origin. On peira.dev every tool reads and writes
+   the same record, so a lab described once flows into all of them. Inside the
+   claude.ai artifact sandbox localStorage is unavailable, so it degrades to
+   in-memory for the session and the JSON export becomes the way to carry it. */
+const LabProfile = (function () {
+  const KEY = 'peira.lab.v1';
+  const BLANK = { v:1, updated:null, services:[], scale:null, sizing:null,
+                  nodes:[], guests:[], datasets:[], power:null, deps:null, handover:null };
+  let mem = null, durable = false;
+  try { localStorage.setItem('__pt', '1'); localStorage.removeItem('__pt'); durable = true; } catch (e) { durable = false; }
+
+  const subs = [];
+  const clone = o => JSON.parse(JSON.stringify(o));
+
+  function get() {
+    if (mem) return mem;
+    if (durable) {
+      try {
+        const raw = localStorage.getItem(KEY);
+        if (raw) { const o = JSON.parse(raw); if (o && o.v === 1) mem = Object.assign(clone(BLANK), o); }
+      } catch (e) { /* corrupt or blocked — fall through to blank */ }
+    }
+    if (!mem) mem = clone(BLANK);
+    return mem;
+  }
+
+  function persist() {
+    if (!durable) return;
+    try { localStorage.setItem(KEY, JSON.stringify(mem)); } catch (e) { /* quota or blocked */ }
+  }
+
+  function set(patch) {
+    const p = get();
+    Object.assign(p, patch);
+    p.v = 1;
+    p.updated = new Date().toISOString().slice(0, 10);
+    persist();
+    subs.forEach(f => { try { f(p); } catch (e) {} });
+    return p;
+  }
+
+  function clear() {
+    mem = clone(BLANK);
+    if (durable) { try { localStorage.removeItem(KEY); } catch (e) {} }
+    subs.forEach(f => { try { f(mem); } catch (e) {} });
+    return mem;
+  }
+
+  function isEmpty(p) {
+    p = p || get();
+    return !p.services.length && !p.nodes.length && !p.guests.length &&
+           !p.datasets.length && !p.power && !p.deps && !p.handover && !p.sizing;
+  }
+
+  const esc = s => String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+  /* ---- summary + AI context ---- */
+  function summary(p) {
+    p = p || get();
+    const bits = [];
+    if (p.nodes.length)    bits.push(p.nodes.length + ' node' + (p.nodes.length > 1 ? 's' : ''));
+    if (p.guests.length)   bits.push(p.guests.length + ' guest' + (p.guests.length > 1 ? 's' : ''));
+    if (p.services.length) bits.push(p.services.length + ' service' + (p.services.length > 1 ? 's' : ''));
+    if (p.datasets.length) bits.push(p.datasets.length + ' data set' + (p.datasets.length > 1 ? 's' : ''));
+    if (p.power)           bits.push('power plan');
+    if (p.deps)            bits.push('dependency map');
+    if (p.handover)        bits.push('handover');
+    return bits.join(' · ');
+  }
+
+  // Compact plain-text description for AI tools to prepend as lab context.
+  function ctx() {
+    const p = get();
+    if (isEmpty(p)) return '';
+    const L = [];
+    if (p.nodes.length)
+      L.push('Nodes: ' + p.nodes.map(n => `${n.name} (${n.cores}c/${n.ram}GB)`).join(', '));
+    if (p.guests.length)
+      L.push('Guests: ' + p.guests.map(g => `${g.name} on ${g.node} (${g.cores}c/${g.ram}GB)`).join(', '));
+    if (p.services.length) L.push('Services: ' + p.services.join(', '));
+    if (p.datasets.length)
+      L.push('Data sets: ' + p.datasets.map(d => `${d.name} ~${d.size}GB`).join(', '));
+    if (p.power && p.power.ups) L.push(`UPS: ${p.power.ups}W load, ${p.power.runtime} min runtime`);
+    return "The user's lab, from their saved profile (use it to make the answer specific; " +
+           "do not assume anything not listed):\n" + L.join('\n');
+  }
+
+  /* ---- Markdown lab document ---- */
+  const PRI_NAME = { 1:'critical', 2:'normal', 3:'best-effort' };
+  function doc() {
+    const p = get();
+    const out = ['# Homelab field record', ''];
+    out.push('Generated ' + (p.updated || new Date().toISOString().slice(0, 10)) +
+             ' with the Peira Labs field tools (https://peira.dev/tools/).', '');
+    if (isEmpty(p)) {
+      out.push('_No lab details recorded yet. Fill in any field tool and press **Save to profile**._');
+      return out.join('\n');
+    }
+    if (p.sizing) {
+      out.push('## Sizing target', '',
+        `- Cores: ${p.sizing.cores}`,
+        `- RAM: ${p.sizing.ram} GB`,
+        `- Live data: ${p.sizing.data} TB`,
+        `- Backup space: ${p.sizing.backup} TB`);
+      if (p.sizing.rec) out.push(`- Recommendation: ${p.sizing.rec}`);
+      out.push('');
+    }
+    if (p.services.length) out.push('## Services', '', p.services.map(s => '- ' + s).join('\n'), '');
+    if (p.nodes.length) {
+      out.push('## Nodes', '', '| Node | Cores | RAM (GB) |', '|---|---|---|');
+      p.nodes.forEach(n => out.push(`| ${n.name} | ${n.cores} | ${n.ram} |`));
+      out.push('');
+    }
+    if (p.guests.length) {
+      out.push('## Guests', '', '| Guest | Host node | Cores | RAM (GB) | Priority |', '|---|---|---|---|---|');
+      p.guests.forEach(g => out.push(`| ${g.name} | ${g.node} | ${g.cores} | ${g.ram} | ${PRI_NAME[g.pri] || g.pri} |`));
+      out.push('');
+    }
+    if (p.datasets.length) {
+      out.push('## Data and backups', '', '| Data set | Size (GB) | Snapshots | 2nd device | Offsite | Cold |', '|---|---|---|---|---|---|');
+      p.datasets.forEach(d => out.push(
+        `| ${d.name} | ${d.size} | ${d.snap ? 'yes' : 'no'} | ${d.dev2 ? 'yes' : 'no'} | ${d.off ? 'yes' : 'no'} | ${d.cold ? 'yes' : 'no'} |`));
+      out.push('');
+    }
+    if (p.power) {
+      out.push('## Power loss', '');
+      if (p.power.ups) out.push(`- UPS load: ${p.power.ups} W`, `- Estimated runtime: ${p.power.runtime} min`);
+      if (p.power.shutdown && p.power.shutdown.length) {
+        out.push('', '**Shutdown order** (first to last):', '');
+        p.power.shutdown.forEach((m, i) => out.push(`${i + 1}. ${m}`));
+      }
+      if (p.power.boot && p.power.boot.length) {
+        out.push('', '**Boot order** (first to last):', '');
+        p.power.boot.forEach((m, i) => out.push(`${i + 1}. ${m}`));
+      }
+      out.push('');
+    }
+    if (p.deps && p.deps.items && p.deps.items.length) {
+      out.push('## Dependencies', '', '| Service | Depends on |', '|---|---|');
+      p.deps.items.forEach(it => out.push(`| ${it.name} | ${(it.needs || []).join(', ') || '—'} |`));
+      if (p.deps.spof && p.deps.spof.length)
+        out.push('', '**Single points of failure:** ' + p.deps.spof.join(', '));
+      out.push('');
+    }
+    if (p.handover) {
+      out.push('## If someone else has to run this', '');
+      Object.keys(p.handover).forEach(k => {
+        // entries are { q, a }; a bare string is an older profile, keyed by question text
+        const v = p.handover[k];
+        const q = (v && typeof v === 'object') ? v.q : k;
+        const a = (v && typeof v === 'object') ? v.a : v;
+        if (a) out.push(`### ${q}`, '', a, '');
+      });
+    }
+    out.push('---', '', 'Built with free field tools at https://peira.dev/tools/');
+    return out.join('\n');
+  }
+
+  /* ---- text modal (works where downloads are blocked) ----
+     Returns the backdrop element so callers can extend it safely rather than
+     re-querying the document (which would find an older modal if one is open). */
+  function showText(title, desc, text, filename) {
+    const back = document.createElement('div');
+    back.className = 'pmodal';
+    back.innerHTML =
+      `<div class="pmbox"><h3>${esc(title)}</h3><p>${esc(desc)}</p>` +
+      `<textarea readonly spellcheck="false"></textarea>` +
+      `<div class="pmacts"><button class="pbtn" data-a="copy">Copy</button>` +
+      `<button class="pbtn" data-a="dl">Download</button>` +
+      `<button class="pbtn" data-a="close">Close</button></div></div>`;
+    const ta = back.querySelector('textarea');
+    ta.value = text;
+    const close = () => back.remove();
+    back.addEventListener('click', e => { if (e.target === back) close(); });
+    back.querySelector('[data-a="close"]').onclick = close;
+    back.querySelector('[data-a="copy"]').onclick = async () => {
+      let ok = false;
+      try { await navigator.clipboard.writeText(text); ok = true; } catch (e) {}
+      if (!ok) { try { ta.select(); ok = document.execCommand('copy'); } catch (e) {} }
+      toast(ok ? 'Copied to clipboard' : 'Select the text and copy manually');
+    };
+    back.querySelector('[data-a="dl"]').onclick = () => {
+      try {
+        const url = URL.createObjectURL(new Blob([text], { type:'text/plain;charset=utf-8' }));
+        const a = document.createElement('a');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click();
+        setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
+      } catch (e) { toast('Download blocked here — use Copy'); }
+    };
+    document.body.appendChild(back);
+    ta.focus();
+    return back;
+  }
+
+  let toastEl = null;
+  function toast(msg) {
+    if (toastEl) toastEl.remove();
+    toastEl = document.createElement('div');
+    toastEl.className = 'ptoast';
+    toastEl.textContent = msg;
+    document.body.appendChild(toastEl);
+    const mine = toastEl;
+    setTimeout(() => { if (mine === toastEl) { mine.remove(); toastEl = null; } }, 2600);
+  }
+
+  function importText(raw) {
+    const o = JSON.parse(raw);
+    if (!o || o.v !== 1) throw new Error('That is not a Peira lab profile (expected v1).');
+    mem = Object.assign(clone(BLANK), o);
+    persist();
+    subs.forEach(f => { try { f(mem); } catch (e) {} });
+    return mem;
+  }
+
+  /* ---- the bar ----
+     opts: { el, save?: () => patch, load?: (profile) => void, syncs?: string } */
+  function bar(opts) {
+    opts = opts || {};
+    const host = document.getElementById(opts.el || 'pbar');
+    if (!host) return;
+
+    function render() {
+      const p = get();
+      const empty = isEmpty(p);
+      const s = summary(p);
+      host.className = 'pbar' + (empty ? '' : ' on');
+      const note = empty
+        ? (durable ? 'No lab profile yet — tools on this site share one'
+                   : 'Session-only profile (this sandbox blocks storage)')
+        : 'Lab profile: ' + s + (durable ? '' : ' · session only');
+      host.innerHTML =
+        `<span class="pdot"></span><span class="ptxt">${esc(note)}</span>` +
+        `<span class="pacts">` +
+        (opts.save ? `<button class="pbtn" data-a="save" title="Write this tool's data into your shared lab profile">Save to profile</button>` : '') +
+        (opts.load ? `<button class="pbtn" data-a="load"${empty ? ' disabled' : ''} title="Fill this tool in from your saved profile">Load</button>` : '') +
+        `<button class="pbtn" data-a="doc"${empty ? ' disabled' : ''} title="Export your whole lab as a Markdown document">Lab doc</button>` +
+        `<button class="pbtn" data-a="json" title="Export or import the profile as JSON">JSON</button>` +
+        (empty ? '' : `<button class="pbtn" data-a="clear" title="Delete the saved profile">Clear</button>`) +
+        `</span>`;
+
+      host.querySelectorAll('.pbtn').forEach(b => b.onclick = () => act(b.dataset.a));
+    }
+
+    function act(a) {
+      if (a === 'save') {
+        try {
+          const patch = opts.save();
+          if (patch) { set(patch); toast('Saved to lab profile' + (durable ? '' : ' (session only)')); }
+        } catch (e) { toast('Could not save: ' + e.message); }
+      } else if (a === 'load') {
+        // Load replaces what is on screen — that is more destructive than Clear,
+        // which only drops the stored copy, so it gets the confirmation too.
+        if (!confirm('Load from your lab profile? Anything you have typed into this tool will be replaced.')) return;
+        try { opts.load(get()); toast('Loaded from lab profile'); }
+        catch (e) { toast('Could not load: ' + e.message); }
+      } else if (a === 'doc') {
+        showText('Your lab, documented',
+          'A Markdown record of everything your field tools know about this lab. Paste it into your notes, wiki, or repo.',
+          doc(), 'homelab-field-record.md');
+      } else if (a === 'json') {
+        showJson();
+      } else if (a === 'clear') {
+        if (confirm('Delete the saved lab profile? This cannot be undone.')) { clear(); toast('Profile cleared'); }
+      }
+    }
+
+    function showJson() {
+      const back = showText('Lab profile (JSON)',
+        'Copy this to move your profile to another browser, or into the claude.ai copies of these tools. To restore one, paste it in and press Import.',
+        JSON.stringify(get(), null, 2), 'peira-lab-profile.json');
+      const box = back.querySelector('.pmacts');
+      const ta = back.querySelector('textarea');
+      ta.removeAttribute('readonly');
+      const b = document.createElement('button');
+      b.className = 'pbtn'; b.textContent = 'Import';
+      b.onclick = () => {
+        try { importText(ta.value); toast('Profile imported'); back.remove(); }
+        catch (e) { toast('Invalid profile: ' + e.message); }
+      };
+      box.insertBefore(b, box.firstChild);
+    }
+
+    subs.push(render);
+    render();
+  }
+
+  return { get, set, clear, isEmpty, esc, summary, ctx, doc, bar, toast, showText,
+           import: importText, durable, on: f => subs.push(f) };
+})();
+<!-- /PROFILE:JS -->
+
+const SERVICES = [
+  { id:'plex',    nm:'Plex / Jellyfin',        ds:'Media streaming',                 c:2, r:4, d:10, on:true },
+  { id:'arr',     nm:'Arr stack',              ds:'Sonarr, Radarr, Prowlarr',        c:2, r:3, d:25, on:true },
+  { id:'dl',      nm:'Downloader + VPN',       ds:'qBittorrent behind a VPN tunnel', c:1, r:1, d:10, on:true },
+  { id:'ha',      nm:'Home Assistant',         ds:'Smart home hub',                  c:1, r:2, d:16, on:false },
+  { id:'mon',     nm:'Monitoring',             ds:'Prometheus + Grafana',            c:2, r:3, d:50, on:false },
+  { id:'immich',  nm:'Immich',                 ds:'Self-hosted photo library',       c:2, r:4, d:15, on:false },
+  { id:'mc',      nm:'Game server',            ds:'Minecraft or similar',            c:2, r:6, d:20, on:false },
+  { id:'wiki',    nm:'Wiki / notes',           ds:'Docs, wiki, bookmarks',           c:1, r:1, d:10, on:false },
+  { id:'proxy',   nm:'Reverse proxy + DNS',    ds:'Caddy/Traefik, Pi-hole/AdGuard',  c:1, r:1, d:5,  on:true },
+  { id:'pbs',     nm:'Backup server',          ds:'Proxmox Backup Server or Restic', c:2, r:2, d:0,  on:true },
+];
+
+const $ = id => document.getElementById(id);
+const grid = $('services');
+
+const svcEl = {};                       // id -> tile, so the profile can re-tick them
+SERVICES.forEach(s => {
+  const el = document.createElement('div');
+  el.className = 'svc' + (s.on ? ' on' : '');
+  el.innerHTML = `<div class="nm">${s.nm}<span class="tick"></span></div>
+    <div class="ds">${s.ds}</div><div class="rq">${s.c}c / ${s.r}GB RAM</div>`;
+  el.tabIndex = 0;
+  el.setAttribute('role', 'checkbox');
+  el.setAttribute('aria-checked', String(!!s.on));
+  const toggle = () => {
+    s.on = !s.on;
+    el.classList.toggle('on', s.on);
+    el.setAttribute('aria-checked', String(s.on));
+    calc();
+  };
+  el.onclick = toggle;
+  el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } };
+  grid.appendChild(el);
+  svcEl[s.id] = el;
+});
+
+['mediaTB','photoTB','llm','n1','bkMedia'].forEach(id => $(id).addEventListener('input', calc));
+
+function calc() {
+  const mediaTB = +$('mediaTB').value, photoTB = +$('photoTB').value, llm = +$('llm').value;
+  $('mediaOut').textContent = mediaTB + ' TB';
+  $('photoOut').textContent = photoTB + ' TB';
+
+  let c = 1, r = 2, appGB = 40;               // base: hypervisor / OS overhead
+  SERVICES.filter(s => s.on).forEach(s => { c += s.c; r += s.r; appGB += s.d; });
+  if (llm === 7)  { c += 4; r += 8;  appGB += 20; }
+  if (llm === 13) { c += 6; r += 16; appGB += 40; }
+  if (llm === 30) { c += 8; r += 24; appGB += 80; }
+
+  c = Math.ceil(c * 1.3); r = Math.ceil(r * 1.3);          // headroom
+  const dataTB = mediaTB + photoTB + appGB / 1000;
+  const backupTB = Math.ceil((appGB / 1000 + photoTB + ($('bkMedia').checked ? mediaTB : 0)) * 1.5 * 10) / 10;
+
+  $('tCores').textContent = c;
+  $('tRam').textContent = r + ' GB';
+  $('tDisk').textContent = (Math.ceil(dataTB * 10) / 10) + ' TB';
+  $('tBackup').textContent = backupTB + ' TB';
+
+  const n1 = $('n1').checked;
+  let rec, why;
+  if (!n1) {
+    if (r <= 30) {
+      rec = 'One node: a used mini-PC or SFF desktop with <b>32 GB RAM</b> and a 4–6 core CPU covers this comfortably.';
+      why = 'RAM is the binding constraint — vCPUs overcommit fine on a hypervisor. Add a second cheap box later if you catch the cluster bug.';
+      PLAN = { n:1, ram:32, cores:6 };
+    } else if (r <= 58) {
+      rec = 'One beefier node (<b>64 GB RAM</b>, 8 cores) — or split across <b>2 × 32 GB</b> boxes.';
+      why = 'Two smaller used machines are usually cheaper than one big one, and give you a migration target for maintenance.';
+      PLAN = { n:1, ram:64, cores:8 };
+    } else {
+      const n = Math.max(2, Math.ceil(r / 48));
+      rec = `A small cluster: <b>${n} nodes × 64 GB RAM</b>, 8+ cores each.`;
+      why = 'At this size you want the workload spread out anyway — one failure shouldn\'t take everything down.';
+      PLAN = { n, ram:64, cores:8 };
+    }
+  } else {
+    const nodeRam = r > 90 ? 64 : 32;
+    const usable = nodeRam * 0.75;
+    const n = Math.max(3, Math.ceil(r / usable) + 1);
+    rec = `<b>${n} nodes × ${nodeRam} GB RAM</b> (4–8 cores each), sized so any ${n - 1} nodes can carry the full load.`;
+    why = 'Minimum 3 nodes: a 2-node cluster loses quorum when one dies, which defeats the purpose. ' +
+          'The +1 node is your failure budget — without it, "high availability" is a label, not a property.';
+    PLAN = { n, ram:nodeRam, cores:6 };
+  }
+  $('rec').innerHTML = rec;
+  $('why').textContent = why;
+  TOTALS = { cores:c, ram:r, data:Math.ceil(dataTB * 10) / 10, backup:backupTB, rec:rec.replace(/<[^>]+>/g, '') };
+}
+
+let PLAN = { n:1, ram:32, cores:6 }, TOTALS = null;
+
+// How much each service would hurt to lose, for the failover simulator.
+const GUEST_PRI = { proxy:1, ha:1, pbs:2, mon:2, immich:2, wiki:2, plex:2, arr:3, dl:3, mc:3 };
+
+// Turn the ticked services into guests spread round-robin over the recommended
+// nodes, so the failure simulator opens with this build already modelled.
+function plannedGuests() {
+  const on = SERVICES.filter(s => s.on);
+  const g = on.map((s, i) => ({
+    name: s.id, cores: s.c, ram: s.r,
+    node: 'node' + ((i % PLAN.n) + 1), pri: GUEST_PRI[s.id] || 2
+  }));
+  const llm = +$('llm').value;
+  if (llm) g.push({ name:'ollama', cores: llm >= 30 ? 8 : llm >= 13 ? 6 : 4,
+                    ram: llm >= 30 ? 24 : llm >= 13 ? 16 : 8,
+                    node: 'node' + ((g.length % PLAN.n) + 1), pri:3 });
+  return g;
+}
+
+LabProfile.bar({
+  el: 'pbar',
+  save: () => ({
+    services: SERVICES.filter(s => s.on).map(s => s.nm),
+    guests: plannedGuests(),
+    scale: { mediaTB:+$('mediaTB').value, photoTB:+$('photoTB').value, llm:+$('llm').value,
+             n1:$('n1').checked, bkMedia:$('bkMedia').checked },
+    sizing: TOTALS,
+    // seed a cluster matching the recommendation so FT-02 and FT-09 have something real to work with
+    nodes: Array.from({ length: PLAN.n }, (_, i) => ({ name:'node' + (i + 1), cores:PLAN.cores, ram:PLAN.ram })),
+    // and the data sets this build implies, for the backup planner
+    datasets: [
+      +$('mediaTB').value > 0 ? { name:'Media library', size:Math.round(+$('mediaTB').value * 1000), snap:false, dev2:false, off:false, cold:false } : null,
+      +$('photoTB').value > 0 ? { name:'Photo library', size:Math.round(+$('photoTB').value * 1000), snap:false, dev2:false, off:false, cold:false } : null,
+      { name:'VM / container configs', size:50, snap:false, dev2:false, off:false, cold:false }
+    ].filter(Boolean)
+  }),
+  load: p => {
+    if (!p.services.length && !p.scale) throw new Error('nothing sizing-related saved yet');
+    SERVICES.forEach(s => {
+      s.on = p.services.includes(s.nm) || p.services.includes(s.id);   // older profiles stored ids
+      if (svcEl[s.id]) {
+        svcEl[s.id].classList.toggle('on', s.on);
+        svcEl[s.id].setAttribute('aria-checked', String(s.on));
+      }
+    });
+    if (p.scale) {
+      $('mediaTB').value = p.scale.mediaTB; $('photoTB').value = p.scale.photoTB;
+      $('llm').value = p.scale.llm; $('n1').checked = !!p.scale.n1; $('bkMedia').checked = !!p.scale.bkMedia;
+    }
+    calc();
+  }
+});
+
+calc();
+</script>
+</body>
+</html>
