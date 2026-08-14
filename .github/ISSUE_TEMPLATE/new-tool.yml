@@ -1,0 +1,68 @@
+name: "💡 A tool that should exist"
+description: Propose a new field tool, or an idea for one.
+title: "[tool] "
+labels: ["new-tool"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The bar here is deliberately unusual: **a question the internet can't already answer well.**
+
+        There are already thirty RAID capacity calculators and a dozen subnet tools, and they're
+        fine — building a thirty-first helps nobody. What's thin on the ground is tooling that
+        encodes *sequence, consequence and judgment*: what order to do things in, what else breaks,
+        whether you can undo it.
+
+        Please open this before writing code, so we can agree it clears the bar before you spend
+        an evening on it.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: What question would it answer?
+      description: In the words someone would actually use, not a feature description.
+      placeholder: "If I lose the machine my reverse proxy runs on, which services become unreachable from outside?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: today
+    attributes:
+      label: How do people answer it today?
+      description: >-
+        Existing tools, a spreadsheet, guesswork, or a painful afternoon. If something already does
+        this well, say so — it's still worth knowing, and the answer might be to link it rather than
+        build it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: inputs
+    attributes:
+      label: What would the reader type in, and what would come out?
+      description: Roughly. A sketch is fine.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: needs_model
+    attributes:
+      label: Would it need a language model?
+      description: >-
+        Tools that need a model run inside claude.ai on the reader's own account. Tools that don't
+        stay as a single offline HTML file, which is a meaningfully better experience — so this is
+        worth thinking about rather than assuming.
+      options:
+        - "No — it's arithmetic, a decision tree, or a checklist"
+        - "Yes — it has to interpret free text the reader pastes in"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: offer
+    attributes:
+      label: Would you like to build it?
+      options:
+        - label: I'd like to build this myself
+          required: false

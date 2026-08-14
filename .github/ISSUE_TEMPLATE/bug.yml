@@ -1,0 +1,78 @@
+name: "🐛 Bug"
+description: A tool misbehaves, miscalculates, or breaks.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Every tool is a single HTML file you can open directly, so bugs here are usually
+        reproducible in seconds. The smallest input that triggers it is the most useful thing
+        you can give me.
+
+  - type: dropdown
+    id: tool
+    attributes:
+      label: Which tool?
+      options:
+        - FT-01 Sizing Calculator
+        - FT-02 Node Failure Simulator
+        - FT-03 3-2-1 Backup Planner
+        - FT-04 Overlay Network Diagnostic
+        - FT-05 Homelab Troubleshooter (AI)
+        - FT-06 Log Triage (AI)
+        - FT-07 Compose Review (AI)
+        - FT-08 Explain Before You Run (AI)
+        - FT-09 Power-Loss Playbook
+        - FT-10 Blast Radius Mapper
+        - FT-11 Bus Factor
+        - The lab profile (shared across tools)
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open blast-radius.html
+        2. Rename a service to …
+        3. Click …
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect, and what happened instead?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where were you running it?
+      options:
+        - peira.dev/tools/
+        - The HTML file opened locally
+        - A published claude.ai artifact
+        - A fork or remix of my own
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      placeholder: Firefox 130 on Fedora 42
+    validations:
+      required: false
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Console errors
+      description: If anything appeared in the browser console, paste it here. Scrub anything identifying first.
+      render: text
+    validations:
+      required: false

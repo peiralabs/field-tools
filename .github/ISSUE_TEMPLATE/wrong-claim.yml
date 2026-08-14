@@ -1,0 +1,67 @@
+name: "🔴 A tool says something wrong"
+description: A tool states a fact that isn't true, or is out of date.
+title: "[wrong claim] "
+labels: ["wrong-claim"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you — this is the most valuable report this project gets.
+
+        These tools state facts to people with no byline and no date attached, so a confident wrong
+        answer is worse than a crash. A crash is obvious; this isn't.
+
+  - type: dropdown
+    id: tool
+    attributes:
+      label: Which tool?
+      options:
+        - FT-01 Sizing Calculator
+        - FT-02 Node Failure Simulator
+        - FT-03 3-2-1 Backup Planner
+        - FT-04 Overlay Network Diagnostic
+        - FT-05 Homelab Troubleshooter (AI)
+        - FT-06 Log Triage (AI)
+        - FT-07 Compose Review (AI)
+        - FT-08 Explain Before You Run (AI)
+        - FT-09 Power-Loss Playbook
+        - FT-10 Blast Radius Mapper
+        - FT-11 Bus Factor
+        - The README or docs
+    validations:
+      required: true
+
+  - type: textarea
+    id: claim
+    attributes:
+      label: What does it claim?
+      description: Quote it as exactly as you can, or paste a screenshot.
+    validations:
+      required: true
+
+  - type: textarea
+    id: correct
+    attributes:
+      label: What's actually true?
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: Source
+      description: >-
+        Vendor documentation, a man page, a standard, or a release note. Forum threads and blog
+        posts are welcome as context but the fix has to be justified from something authoritative,
+        so a primary source moves this much faster.
+      placeholder: https://docs.example.com/…
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else?
+      description: Version numbers matter — "changed in X 23.0" is exactly the kind of detail that gets missed.
+    validations:
+      required: false

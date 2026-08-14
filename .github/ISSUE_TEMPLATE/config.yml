@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 🔒 Report a security issue privately
+    url: https://github.com/peiralabs/field-tools/security/advisories/new
+    about: Please don't open a public issue for something exploitable — see SECURITY.md.
+  - name: 📖 The guides these tools came out of
+    url: https://peira.dev
+    about: Homelab documentation, honestly written, at peira.dev.
+  - name: 🧰 Use the tools
+    url: https://peira.dev/tools/
+    about: All eleven, running, no signup.

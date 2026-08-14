@@ -1,0 +1,49 @@
+name: Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Read-only: nothing here needs to write to the repo.
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    name: Tool gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # The shared layer lives in _shared/ and is stamped into all eleven tools.
+      # This fails if someone edited _shared/ and forgot to run the injector,
+      # which would otherwise ship eleven files disagreeing with their source.
+      - name: Shared layer is freshly injected
+        run: node inject-profile.mjs --check
+
+      # Syntax, raw control characters, unfilled artifact URLs, and example
+      # addresses outside the documentation ranges. See check-tools.mjs.
+      - name: Tool gate
+        run: node check-tools.mjs
+
+      # Cheap belt-and-braces: every screenshot referenced by the README must
+      # exist, so a renamed or deleted image cannot silently become a broken
+      # image in the most-read file in the repo.
+      - name: README images resolve
+        run: |
+          missing=0
+          while IFS= read -r img; do
+            if [ ! -f "$img" ]; then
+              echo "::error file=README.md::missing image: $img"
+              missing=1
+            fi
+          done < <(grep -oE '\]\((docs/screenshots/[^)]+)\)' README.md | sed -E 's/^\]\(//; s/\)$//' | sort -u)
+          exit $missing
