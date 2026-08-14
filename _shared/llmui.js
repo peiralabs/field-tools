@@ -52,7 +52,7 @@ const LLMUI = (function () {
            </label>
          </div>
          <div class="lrow lkeyrow">
-           <label>API key
+           <label class="lkey">API key
              <input class="linput lk" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your key">
            </label>
            <label class="lmodel">Model
@@ -81,8 +81,11 @@ const LLMUI = (function () {
     function sync() {
       const id = prov.value;
       const def = id ? LLM.PROVIDERS[id] : null;
-      el.querySelector('.lkeyrow').style.display = (def && def.auth === 'none') ? 'none' : '';
-      el.querySelector('.lmodel').style.display = '';
+      // Hide only the key field for keyless providers. Hiding the whole row would
+      // take the model field with it, since the two share a row — which is exactly
+      // what happened the first time, leaving Ollama users with nowhere to type a
+      // model name.
+      el.querySelector('.lkey').style.display = (def && def.auth === 'none') ? 'none' : '';
       if (def && !base.value) base.value = def.base || '';
       if (def && !model.value) model.value = def.model || '';
       note.textContent = def && def.keys ? '' : '';
