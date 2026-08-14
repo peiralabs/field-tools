@@ -261,16 +261,6 @@ CI runs it on every push and pull request.
 
 ---
 
-## Design notes
-
-The tools look like a printed field manual — putty paper, a faint drafting-blue grid, hairline rules, diagonal hatching for warning states, one desaturated ink per tool. That's a deliberate choice, arrived at after two iterations that looked like everything else.
-
-The first draft was dark-mode with neon accents and glowing cards. It looked competent and completely generic. The look here was chosen by working *away* from the patterns that have become visual shorthand for machine-generated design — dark-plus-glow, one-sided accent borders on cards, tracked-caps kicker labels above headings, cream-and-terracotta palettes. What replaced them: hairlines instead of soft shadows, near-square corners, restraint with colour, and motion **only** on state change rather than ambient animation.
-
-You may disagree with the result. The point is that it was a decision rather than a default.
-
----
-
 ## Contributing
 
 Genuinely welcome — especially new tools that answer a question the internet currently doesn't. Start with [CONTRIBUTING.md](CONTRIBUTING.md); it covers the single-file rule, the design system, and what the gate will reject.
