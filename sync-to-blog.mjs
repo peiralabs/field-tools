@@ -27,6 +27,7 @@ const MAP = {
   'power-loss-playbook.html':      'power-loss-playbook',
   'blast-radius.html':             'blast-radius',
   'bus-factor.html':               'bus-factor',
+  'power-cost-calculator.html':    'power-cost-calculator',
 };
 
 try {

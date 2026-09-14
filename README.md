@@ -1,10 +1,10 @@
 # Field Tools
 
-**Eleven small, free tools that answer the homelab questions a guide can't** — because the answer depends on *your* hardware, *your* data, and *your* dependencies.
+**Twelve small, free tools that answer the homelab questions a guide can't** — because the answer depends on *your* hardware, *your* data, and *your* dependencies.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Checks](https://github.com/peiralabs/field-tools/actions/workflows/check.yml/badge.svg)](https://github.com/peiralabs/field-tools/actions/workflows/check.yml)
-[![Tools](https://img.shields.io/badge/tools-11-14b8a6.svg)](#the-eleven-tools)
+[![Tools](https://img.shields.io/badge/tools-12-14b8a6.svg)](#the-twelve-tools)
 [![No build step](https://img.shields.io/badge/build%20step-none-brightgreen.svg)](#how-this-repo-is-built)
 
 **Use them now → [peira.dev/tools](https://peira.dev/tools/)** · no signup, no tracking, no account.
@@ -21,7 +21,7 @@ A guide can walk you through a setup. It can't do arithmetic about your particul
 
 They are deliberately **not** another set of calculators. The internet already has thirty RAID capacity calculators and a dozen subnet tools, and they are all fine. What barely exists is tooling that encodes **sequence, consequence, and judgment** — what order to shut things down in, what else breaks when this breaks, whether the command you just pasted can be undone. That's the gap these aim at.
 
-Seven of the eleven are a single HTML file with no build step, no framework, and no network calls once the page has loaded. Four need a language model to do their job, so they run inside [Claude](https://www.anthropic.com/claude) on *your* account — which means they cost me nothing to offer and can stay free indefinitely.
+Eight of the twelve are a single HTML file with no build step, no framework, and no network calls once the page has loaded. Four need a language model to do their job, so they run inside [Claude](https://www.anthropic.com/claude) on *your* account — which means they cost me nothing to offer and can stay free indefinitely.
 
 ---
 
@@ -56,11 +56,11 @@ python3 cors-server.py                        # http://127.0.0.1:8643, loopback 
 
 Ollama needs no configuration for this — it allows `localhost` origins out of the box. Point it at `http://localhost:11434/v1`, or at another machine on your LAN (`http://10.0.0.50:11434/v1`) — what matters to Ollama is the *page's* origin, not the target.
 
-**4. Fork and change one.** Every tool is also published as a public, remixable Claude artifact — open one, hit remix, and edit it in the browser. Links in [the table below](#the-eleven-tools). Or edit the HTML here and send a pull request; see [CONTRIBUTING.md](CONTRIBUTING.md).
+**4. Fork and change one.** Every tool is also published as a public, remixable Claude artifact — open one, hit remix, and edit it in the browser. Links in [the table below](#the-twelve-tools). Or edit the HTML here and send a pull request; see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
-## The eleven tools
+## The twelve tools
 
 Grouped by the moment you'd reach for them.
 
@@ -77,6 +77,7 @@ Grouped by the moment you'd reach for them.
 | **FT-09** | [Power-Loss Playbook](power-loss-playbook.html) | What order do things shut down in, and does that fit the battery? | [artifact](https://claude.ai/public/artifacts/5454d01d-aa01-4a38-8839-b45059a7375e) |
 | **FT-10** | [Blast Radius Mapper](blast-radius.html) | What *else* stops when this stops? | [artifact](https://claude.ai/public/artifacts/5ab90394-1abf-4a1b-a7fd-f0c5d17f8920) |
 | **FT-11** | [Bus Factor](bus-factor.html) | Could anyone else recover this if I weren't here? | [artifact](https://claude.ai/public/artifacts/9104b77b-75fa-4f26-8fa6-d30a26ba3c1e) |
+| **FT-12** | [Power & Cost Calculator](power-cost-calculator.html) | What does my homelab actually cost to run each month? | [artifact](https://claude.ai/public/artifacts/fedf96fc-cf3d-4d69-8c31-f953d72dc253) |
 
 🤖 = needs a model behind it. Free on claude.ai with the account you already have, or point it at OpenAI, Anthropic, Gemini, DeepSeek, Groq, OpenRouter, or your own Ollama — see [Quick start](#quick-start). The other seven need nothing at all.
 
@@ -202,7 +203,7 @@ If you were unavailable for a month — or permanently — could the people you 
 
 ## One lab, described once
 
-This is the part that makes them a set rather than eleven unrelated pages.
+This is the part that makes them a set rather than twelve unrelated pages.
 
 Describe your lab once — tick services in the sizing calculator, press **Save to profile** — and the others pick it up. The failure simulator opens with your nodes and workloads modelled. The backup planner knows what data you have. The power-loss playbook knows what's plugged in. The AI tools quietly use it as context, so answers are about *your* lab rather than a generic one.
 
@@ -240,7 +241,7 @@ That constraint is deliberate and it's the interesting engineering problem here:
 
 ```
 field-tools/
-├── <tool>.html              11 self-contained tools — never edit the injected blocks
+├── <tool>.html              12 self-contained tools — never edit the injected blocks
 ├── _shared/
 │   ├── profile.{js,css}     the lab profile: storage, the bar, Markdown export
 │   └── ai.{js,css}          the AI shell: markdown renderer, conversation runner,
@@ -253,7 +254,7 @@ field-tools/
 └── docs/screenshots/        README images, reproducible via the script above
 ```
 
-**Edit `_shared/`, never the copy inside a tool.** The injector rewrites everything between `<!-- PROFILE:JS -->` / `<!-- /PROFILE:JS -->` style markers in all eleven files.
+**Edit `_shared/`, never the copy inside a tool.** The injector rewrites everything between `<!-- PROFILE:JS -->` / `<!-- /PROFILE:JS -->` style markers in all twelve files.
 
 ```bash
 node inject-profile.mjs          # after any _shared/ change
@@ -267,7 +268,7 @@ node check-tools.mjs             # the gate
 
 | Check | Why it exists |
 |---|---|
-| Every `<script>` parses | Obvious, but cheap insurance across eleven files |
+| Every `<script>` parses | Obvious, but cheap insurance across twelve files |
 | **No raw control characters** | A literal control byte used as a sentinel survived every local test, then got silently stripped by a clipboard and broke a published tool. Use `\xNN` escapes. |
 | No unfilled `ARTIFACT_URL` | A placeholder shipping to production is a dead link |
 | Addresses stay in the non-routable example ranges | The publication-safety rule above, enforced rather than remembered |
