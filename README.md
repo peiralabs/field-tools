@@ -244,8 +244,10 @@ field-tools/
 ├── <tool>.html              12 self-contained tools — never edit the injected blocks
 ├── _shared/
 │   ├── profile.{js,css}     the lab profile: storage, the bar, Markdown export
-│   └── ai.{js,css}          the AI shell: markdown renderer, conversation runner,
+│   ├── ai.{js,css}          the AI shell: markdown renderer, conversation runner,
 │                            and the guard that degrades gracefully off claude.ai
+│   └── llm.{js,css}, llmui.js   bring-your-own-model layer: provider presets,
+│                                default models, and the model setup panel
 ├── scripts/
 │   └── capture-screenshots.mjs   regenerates docs/screenshots
 ├── inject-profile.mjs       stamps _shared/ into every tool between markers
@@ -275,6 +277,14 @@ node check-tools.mjs             # the gate
 | Shared layer is freshly injected | Catches "edited `_shared/` and forgot to run the injector" |
 
 CI runs it on every push and pull request.
+
+### Syncing to the site
+
+`sync-to-blog.mjs` copies each tool into the site repo's `public/tools/<slug>/index.html`. The served copies carry some site-only markup (SEO/Open Graph tags, a related-reading block) that isn't in this repo. It lives between `<!-- blog:head -->…<!-- /blog:head -->` and `<!-- blog:foot -->…<!-- /blog:foot -->` in the site's copy, and the sync re-inserts those blocks around the fresh source. If the site copy has site-only markup **outside** the markers, the sync aborts rather than overwrite it. A no-op sync reporting `0 changed` proves the round trip is lossless.
+
+### Default models go stale
+
+The provider presets in `_shared/llm.js` name a default model per provider, and providers retire model IDs. `gemini-2.0-flash` was shut down on 2026-06-01, and DeepSeek discontinued `deepseek-chat` on 2026-07-24. Check each default against the provider's model list and deprecation page whenever you touch the tools, and at least quarterly.
 
 ---
 
