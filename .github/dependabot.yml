@@ -1,0 +1,10 @@
+version: 2
+updates:
+  # These workflows pin action majors that go stale silently. Nothing else in
+  # this repo has a package manifest, so github-actions is the whole job.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
